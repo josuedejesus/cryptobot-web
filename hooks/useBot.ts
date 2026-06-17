@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { io, Socket } from "socket.io-client";
 
-const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
+const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
 
 export interface Trade {
   id: number;
@@ -79,6 +79,8 @@ export function useBot() {
   const [config, setConfig] = useState<BotConfig | null>(null);
 
   useEffect(() => {
+    console.log("API URL:", API);
+    console.log("ENV:", process.env.NEXT_PUBLIC_API_URL);
     fetch(`${API}/paper-trade/summary`)
       .then((r) => r.json())
       .then(setSummary);
