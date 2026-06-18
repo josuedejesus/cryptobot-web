@@ -406,48 +406,75 @@ export default function Home() {
             )}
 
             {/* Trade history */}
-            {summary && summary.trades.filter((t) => t.result).length > 0 && (
-              <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
-                <p className="text-xs text-gray-500 uppercase tracking-widest mb-4">
-                  Historial
-                </p>
-                <div className="space-y-1">
-                  {summary.trades
-                    .filter((t) => t.result)
-                    .map((trade) => (
-                      <div
-                        key={trade.id}
-                        className="flex items-center justify-between py-2.5 border-b border-gray-800/50 last:border-0 text-sm"
-                      >
-                        <div className="flex items-center gap-3">
-                          <span
-                            className={`text-xs font-bold px-2 py-0.5 rounded ${
-                              trade.type === "LONG"
-                                ? "bg-emerald-900/40 text-emerald-400"
-                                : "bg-red-900/40 text-red-400"
-                            }`}
-                          >
-                            {trade.type}
-                          </span>
-                          <span className="font-mono text-gray-400 text-xs">
-                            ${trade.entryPrice.toFixed(4)}
-                          </span>
-                          <ChevronRight className="w-3 h-3 text-gray-600" />
-                          <span className="font-mono text-gray-400 text-xs">
-                            ${trade.exitPrice?.toFixed(4)}
-                          </span>
-                        </div>
+            {summary &&
+              summary.trades
+                .filter((t) => t.result)
+                .map((trade) => (
+                  <div
+                    key={trade.id}
+                    className="py-2.5 border-b border-gray-800/50 last:border-0 text-sm"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
                         <span
-                          className={`font-bold ${trade.result === "WIN" ? "text-emerald-400" : "text-red-400"}`}
+                          className={`text-xs font-bold px-2 py-0.5 rounded ${
+                            trade.type === "LONG"
+                              ? "bg-emerald-900/40 text-emerald-400"
+                              : "bg-red-900/40 text-red-400"
+                          }`}
                         >
-                          {trade.pnl && trade.pnl >= 0 ? "+" : ""}
-                          {trade.pnl?.toFixed(2)} USDT
+                          {trade.type}
+                        </span>
+                        <span className="font-mono text-gray-400 text-xs">
+                          ${trade.entryPrice.toFixed(4)}
+                        </span>
+                        <ChevronRight className="w-3 h-3 text-gray-600" />
+                        <span className="font-mono text-gray-400 text-xs">
+                          ${trade.exitPrice?.toFixed(4)}
                         </span>
                       </div>
-                    ))}
-                </div>
-              </div>
-            )}
+                      <span
+                        className={`font-bold ${trade.result === "WIN" ? "text-emerald-400" : "text-red-400"}`}
+                      >
+                        {trade.pnl && trade.pnl >= 0 ? "+" : ""}
+                        {trade.pnl?.toFixed(2)} USDT
+                      </span>
+                    </div>
+                    {/* Picos */}
+                    {(trade.peakPrice || trade.troughPrice) && (
+                      <div className="flex gap-4 mt-1 text-xs">
+                        {trade.peakPrice && (
+                          <span
+                            className={
+                              trade.type === "LONG"
+                                ? "text-emerald-700"
+                                : "text-red-700"
+                            }
+                          >
+                            {trade.type === "LONG"
+                              ? "↑ máx favorable:"
+                              : "↓ mín favorable:"}{" "}
+                            ${trade.peakPrice.toFixed(4)}
+                          </span>
+                        )}
+                        {trade.troughPrice && (
+                          <span
+                            className={
+                              trade.type === "LONG"
+                                ? "text-red-700"
+                                : "text-emerald-700"
+                            }
+                          >
+                            {trade.type === "LONG"
+                              ? "↓ mín adverso:"
+                              : "↑ máx adverso:"}{" "}
+                            ${trade.troughPrice.toFixed(4)}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ))}
           </>
         )}
 
