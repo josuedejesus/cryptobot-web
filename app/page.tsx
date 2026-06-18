@@ -518,9 +518,9 @@ export default function Home() {
                             )}
                           </div>
                           <span
-                            className={`font-bold ${trade.result === "WIN" ? "text-emerald-400" : "text-red-400"}`}
+                            className={`font-bold ${(trade.pnl ?? 0) >= 0 ? "text-emerald-400" : "text-red-400"}`}
                           >
-                            {trade.pnl && trade.pnl >= 0 ? "+" : ""}
+                            {(trade.pnl ?? 0) >= 0 ? "+" : ""}{" "}
                             {trade.pnl?.toFixed(2)} USDT
                           </span>
                         </div>

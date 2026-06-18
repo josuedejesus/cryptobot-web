@@ -98,7 +98,14 @@ export function useBot() {
     socket.on("disconnect", () => setConnected(false));
     socket.on("signal", (s: Signal) => setLastSignal(s));
     socket.on("summary", (s: Summary) => setSummary(s));
-
+    socket.on("trade:opened", async () => {
+      const s = await fetch(`${API}/paper-trade/summary`).then((r) => r.json());
+      setSummary(s);
+    });
+    socket.on("trade:closed", async () => {
+      const s = await fetch(`${API}/paper-trade/summary`).then((r) => r.json());
+      setSummary(s);
+    });
     return () => {
       socket.disconnect();
     };
