@@ -23,8 +23,15 @@ const SYMBOLS = [
 const TIMEFRAMES = ["3m", "5m", "15m"];
 
 export default function Home() {
-  const { summary, lastSignal, connected, config, updateConfig, applyPreset } =
-    useBot();
+  const {
+    summary,
+    lastSignal,
+    connected,
+    config,
+    updateConfig,
+    applyPreset,
+    closeActiveTrade,
+  } = useBot();
   const [tab, setTab] = useState<"dashboard" | "config">("dashboard");
   const [saving, setSaving] = useState(false);
 
@@ -245,75 +252,102 @@ export default function Home() {
                   </div>
                 </div>
 
-               {/* Trade activo */}
-{summary.activeTrade && (
-  <div className="bg-gray-900 rounded-xl p-5 border border-yellow-800">
-    <p className="text-yellow-400 text-sm font-medium mb-3">
-      ⚡ Trade Activo
-    </p>
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-      <div>
-        <p className="text-gray-500">Tipo</p>
-        <p className={`font-bold ${summary.activeTrade.type === "LONG" ? "text-green-400" : "text-red-400"}`}>
-          {summary.activeTrade.type}
-        </p>
-      </div>
-      <div>
-        <p className="text-gray-500">Entrada</p>
-        <p className="font-medium">
-          ${summary.activeTrade.entryPrice.toFixed(4)}
-        </p>
-      </div>
-      <div>
-        <p className="text-gray-500">Stop Loss</p>
-        <p className="font-medium text-red-400">
-          ${summary.activeTrade.stopLoss.toFixed(4)}
-        </p>
-      </div>
-      <div>
-        <p className="text-gray-500">Take Profit</p>
-        <p className="font-medium text-green-400">
-          ${summary.activeTrade.takeProfit.toFixed(4)}
-        </p>
-      </div>
+                {/* Trade activo */}
+                {summary.activeTrade && (
+                  <div className="bg-gray-900 rounded-xl p-5 border border-yellow-800">
+                    <p className="text-yellow-400 text-sm font-medium mb-3">
+                      ⚡ Trade Activo
+                    </p>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                      <div>
+                        <p className="text-gray-500">Tipo</p>
+                        <p
+                          className={`font-bold ${summary.activeTrade.type === "LONG" ? "text-green-400" : "text-red-400"}`}
+                        >
+                          {summary.activeTrade.type}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-gray-500">Entrada</p>
+                        <p className="font-medium">
+                          ${summary.activeTrade.entryPrice.toFixed(4)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-gray-500">Stop Loss</p>
+                        <p className="font-medium text-red-400">
+                          ${summary.activeTrade.stopLoss.toFixed(4)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-gray-500">Take Profit</p>
+                        <p className="font-medium text-green-400">
+                          ${summary.activeTrade.takeProfit.toFixed(4)}
+                        </p>
+                      </div>
 
-      {/* PnL actual */}
-      {lastSignal && (() => {
-        const currentPrice = lastSignal.price;
-        const entryPrice   = summary.activeTrade.entryPrice;
-        const positionSize = config?.positionSize ?? 100;
+                      {/* PnL actual */}
+                      {lastSignal &&
+                        (() => {
+                          const currentPrice = lastSignal.price;
+                          const entryPrice = summary.activeTrade.entryPrice;
+                          const positionSize = config?.positionSize ?? 100;
 
-        const priceChange = summary.activeTrade.type === 'LONG'
-          ? (currentPrice - entryPrice) / entryPrice
-          : (entryPrice - currentPrice) / entryPrice;
+                          const priceChange =
+                            summary.activeTrade.type === "LONG"
+                              ? (currentPrice - entryPrice) / entryPrice
+                              : (entryPrice - currentPrice) / entryPrice;
 
-        const unrealizedPnl = positionSize * priceChange;
-        const isPositive    = unrealizedPnl >= 0;
+                          const unrealizedPnl = positionSize * priceChange;
+                          const isPositive = unrealizedPnl >= 0;
 
-        return (
-          <>
-            <div>
-              <p className="text-gray-500">Precio actual</p>
-              <p className="font-medium">${currentPrice.toFixed(4)}</p>
-            </div>
-            <div>
-              <p className="text-gray-500">PnL actual</p>
-              <p className={`font-bold ${isPositive ? 'text-green-400' : 'text-red-400'}`}>
-                {isPositive ? '+' : ''}{unrealizedPnl.toFixed(2)} USDT
-              </p>
-            </div>
-            <div>
-              <p className="text-gray-500">Progreso TP</p>
-              <p className="font-medium text-gray-300">
-                {Math.min(Math.abs(priceChange / (config?.takeProfitPercent ?? 0.01)) * 100, 100).toFixed(0)}%
-              </p>
-            </div>
-          </>
-        );
-      })()}
-    </div>
-  </div>
-)}
+                          return (
+                            <>
+                              <div>
+                                <p className="text-gray-500">Precio actual</p>
+                                <p className="font-medium">
+                                  ${currentPrice.toFixed(4)}
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-gray-500">PnL actual</p>
+                                <p
+                                  className={`font-bold ${isPositive ? "text-green-400" : "text-red-400"}`}
+                                >
+                                  {isPositive ? "+" : ""}
+                                  {unrealizedPnl.toFixed(2)} USDT
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-gray-500">Progreso TP</p>
+                                <p className="font-medium text-gray-300">
+                                  {Math.min(
+                                    Math.abs(
+                                      priceChange /
+                                        (config?.takeProfitPercent ?? 0.01),
+                                    ) * 100,
+                                    100,
+                                  ).toFixed(0)}
+                                  %
+                                </p>
+                              </div>
+                            </>
+                          );
+                        })()}
+                    </div>
+                    {/* Botón cerrar trade */}
+                    <button
+                      onClick={async () => {
+                        if (!closeActiveTrade) return;
+                        const data = await closeActiveTrade();
+                        alert(`Trade cerrado | PnL: $${data.pnl?.toFixed(2)}`);
+                      }}
+                      className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition-colors"
+                    >
+                      🚫 Cerrar manualmente
+                    </button>
+                  </div>
+                )}
 
                 {/* Historial */}
                 {summary.trades.length > 0 && (

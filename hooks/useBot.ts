@@ -119,5 +119,27 @@ export function useBot() {
     return updated;
   };
 
+  const closeActiveTrade = async () => {
+    const res = await fetch(`${API}/paper-trade/close`, {
+      method: "POST",
+    });
+    const data = await res.json();
+    const summary = await fetch(`${API}/paper-trade/summary`).then((r) =>
+      r.json(),
+    );
+    setSummary(summary);
+    return data;
+  };
+
+  return {
+    summary,
+    lastSignal,
+    connected,
+    config,
+    updateConfig,
+    applyPreset,
+    closeActiveTrade,
+  };
+
   return { summary, lastSignal, connected, config, updateConfig, applyPreset };
 }
