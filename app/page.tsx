@@ -75,38 +75,39 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-[#0a0a0f] text-white">
       {/* Top bar */}
-      <header className="border-b border-gray-800/60 px-6 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <span className="text-lg font-bold tracking-tight">CryptoBot</span>
-          {config && (
-            <div className="flex items-center gap-1.5 text-xs">
-              <span className="bg-gray-800 text-gray-300 px-2 py-0.5 rounded font-mono">{config.symbol}</span>
-              <span className="bg-gray-800 text-gray-300 px-2 py-0.5 rounded font-mono">{config.timeframe}</span>
-              <span className={`px-2 py-0.5 rounded text-xs font-medium ${config.mode === 'paper' ? 'bg-blue-900/40 text-blue-400' : 'bg-emerald-900/40 text-emerald-400'}`}>
-                {config.mode === 'paper' ? 'Paper' : 'Real'}
-              </span>
-            </div>
-          )}
-        </div>
-        <div className="flex items-center gap-3">
-          {config && (
-            <button
-              onClick={() => handleConfigChange('isPaused', !config.isPaused)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                config.isPaused
-                  ? 'bg-amber-500/20 text-amber-400 hover:bg-amber-500/30'
-                  : 'bg-gray-800 text-gray-400 hover:text-white hover:bg-gray-700'
-              }`}
-            >
-              {config.isPaused ? <><Play className="w-3 h-3" /> Reanudar</> : <><Pause className="w-3 h-3" /> Pausar</>}
-            </button>
-          )}
-          <div className={`flex items-center gap-1.5 text-xs ${connected ? 'text-emerald-400' : 'text-red-400'}`}>
-            {connected ? <Wifi className="w-3.5 h-3.5" /> : <WifiOff className="w-3.5 h-3.5" />}
-            {connected ? 'En vivo' : 'Desconectado'}
-          </div>
-        </div>
-      </header>
+<header className="border-b border-gray-800/60 px-4 py-3 flex items-center justify-between gap-2">
+  <div className="flex items-center gap-2 min-w-0">
+    <span className="text-base font-bold tracking-tight shrink-0">CryptoBot</span>
+    {config && (
+      <div className="flex items-center gap-1 text-xs min-w-0">
+        <span className="bg-gray-800 text-gray-300 px-1.5 py-0.5 rounded font-mono shrink-0">{config.symbol.replace('USDT', '')}</span>
+        <span className="bg-gray-800 text-gray-300 px-1.5 py-0.5 rounded font-mono shrink-0">{config.timeframe}</span>
+        <span className={`px-1.5 py-0.5 rounded font-medium shrink-0 ${config.mode === 'paper' ? 'bg-blue-900/40 text-blue-400' : 'bg-emerald-900/40 text-emerald-400'}`}>
+          {config.mode === 'paper' ? 'Paper' : 'Real'}
+        </span>
+      </div>
+    )}
+  </div>
+  <div className="flex items-center gap-2 shrink-0">
+    {config && (
+      <button
+        onClick={() => handleConfigChange('isPaused', !config.isPaused)}
+        className={`p-1.5 rounded-lg transition-colors ${
+          config.isPaused
+            ? 'bg-amber-500/20 text-amber-400 hover:bg-amber-500/30'
+            : 'bg-gray-800 text-gray-400 hover:text-white'
+        }`}
+        title={config.isPaused ? 'Reanudar' : 'Pausar'}
+      >
+        {config.isPaused ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
+      </button>
+    )}
+    <div className={`flex items-center gap-1 text-xs ${connected ? 'text-emerald-400' : 'text-red-400'}`}>
+      {connected ? <Wifi className="w-3.5 h-3.5" /> : <WifiOff className="w-3.5 h-3.5" />}
+      <span className="hidden sm:inline">{connected ? 'En vivo' : 'Sin conexión'}</span>
+    </div>
+  </div>
+</header>
 
       {/* Nav tabs */}
       <div className="border-b border-gray-800/60 px-6">
