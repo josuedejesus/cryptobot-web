@@ -28,7 +28,7 @@ export interface Summary {
 }
 
 export interface Signal {
-  signal: "LONG" | "SHORT" | "HOLD";
+  signal: 'LONG' | 'SHORT' | 'HOLD';
   price: number;
   ema9: number;
   ema21: number;
@@ -40,7 +40,8 @@ export interface Signal {
   bbSqueeze: boolean;
   vwap: number;
   confirmed: boolean;
-  trend: "BULLISH" | "BEARISH" | "NEUTRAL";
+  trend: 'BULLISH' | 'BEARISH' | 'NEUTRAL';
+  reason: string;
 }
 
 export interface BotConfig {
