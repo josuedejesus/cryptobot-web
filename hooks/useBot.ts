@@ -12,10 +12,12 @@ export interface Trade {
   takeProfit: number;
   result?: "WIN" | "LOSS";
   pnl?: number;
+  reason?: string;
   openedAt: string;
   closedAt?: string;
   peakPrice?: number;
   troughPrice?: number;
+  trailingStop?: number;
 }
 
 export interface Summary {

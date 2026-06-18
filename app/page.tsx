@@ -377,6 +377,16 @@ export default function Home() {
                       ${summary.activeTrade.takeProfit.toFixed(4)}
                     </p>
                   </div>
+                  {summary.activeTrade.trailingStop && (
+                    <div>
+                      <p className="text-xs text-gray-500 mb-0.5">
+                        Trailing Stop
+                      </p>
+                      <p className="font-mono text-amber-400">
+                        ${summary.activeTrade.trailingStop.toFixed(4)}
+                      </p>
+                    </div>
+                  )}
                   {lastSignal && (
                     <div>
                       <p className="text-xs text-gray-500 mb-0.5">
@@ -406,75 +416,139 @@ export default function Home() {
             )}
 
             {/* Trade history */}
-            {summary &&
-              summary.trades
-                .filter((t) => t.result)
-                .map((trade) => (
-                  <div
-                    key={trade.id}
-                    className="py-2.5 border-b border-gray-800/50 last:border-0 text-sm"
+            {summary && summary.trades.filter((t) => t.result).length > 0 && (
+              <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
+                <div className="flex items-center justify-between mb-4">
+                  <p className="text-xs text-gray-500 uppercase tracking-widest">
+                    Historial
+                  </p>
+                  <button
+                    onClick={() => {
+                      if (!summary) return;
+                      const trades = summary.trades.filter((t) => t.result);
+                      const byReason = trades.reduce(
+                        (acc, t) => {
+                          const key =
+                            t.reason?.split("|")[0].trim() ?? "Desconocido";
+                          if (!acc[key])
+                            acc[key] = { wins: 0, losses: 0, pnl: 0 };
+                          if (t.result === "WIN") acc[key].wins++;
+                          else acc[key].losses++;
+                          acc[key].pnl += t.pnl ?? 0;
+                          return acc;
+                        },
+                        {} as Record<
+                          string,
+                          { wins: number; losses: number; pnl: number }
+                        >,
+                      );
+
+                      const report = {
+                        resumen: {
+                          totalTrades: trades.length,
+                          wins: trades.filter((t) => t.result === "WIN").length,
+                          losses: trades.filter((t) => t.result === "LOSS")
+                            .length,
+                          winRate: summary.winRate,
+                          pnlTotal: summary.totalPnl,
+                          balance: summary.balance,
+                        },
+                        porSenal: Object.entries(byReason).map(
+                          ([signal, data]) => ({
+                            signal,
+                            wins: data.wins,
+                            losses: data.losses,
+                            winRate: `${((data.wins / (data.wins + data.losses)) * 100).toFixed(0)}%`,
+                            pnl: data.pnl.toFixed(2),
+                          }),
+                        ),
+                        trades: trades.map((t) => ({
+                          type: t.type,
+                          entry: t.entryPrice.toFixed(4),
+                          exit: t.exitPrice?.toFixed(4),
+                          pnl: t.pnl?.toFixed(2),
+                          result: t.result,
+                          reason: t.reason,
+                          peakFavorable: t.peakPrice?.toFixed(4),
+                          peakAdverso: t.troughPrice?.toFixed(4),
+                        })),
+                      };
+
+                      navigator.clipboard.writeText(
+                        JSON.stringify(report, null, 2),
+                      );
+                      alert("✅ Datos copiados al clipboard");
+                    }}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 text-xs font-medium rounded-lg transition-colors"
                   >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <span
-                          className={`text-xs font-bold px-2 py-0.5 rounded ${
-                            trade.type === "LONG"
-                              ? "bg-emerald-900/40 text-emerald-400"
-                              : "bg-red-900/40 text-red-400"
-                          }`}
-                        >
-                          {trade.type}
-                        </span>
-                        <span className="font-mono text-gray-400 text-xs">
-                          ${trade.entryPrice.toFixed(4)}
-                        </span>
-                        <ChevronRight className="w-3 h-3 text-gray-600" />
-                        <span className="font-mono text-gray-400 text-xs">
-                          ${trade.exitPrice?.toFixed(4)}
-                        </span>
-                      </div>
-                      <span
-                        className={`font-bold ${trade.result === "WIN" ? "text-emerald-400" : "text-red-400"}`}
+                    📊 Copiar análisis
+                  </button>
+                </div>
+
+                <div className="space-y-1">
+                  {summary.trades
+                    .filter((t) => t.result)
+                    .map((trade) => (
+                      <div
+                        key={trade.id}
+                        className="py-2.5 border-b border-gray-800/50 last:border-0 text-sm"
                       >
-                        {trade.pnl && trade.pnl >= 0 ? "+" : ""}
-                        {trade.pnl?.toFixed(2)} USDT
-                      </span>
-                    </div>
-                    {/* Picos */}
-                    {(trade.peakPrice || trade.troughPrice) && (
-                      <div className="flex gap-4 mt-1 text-xs">
-                        {trade.peakPrice && (
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <span
+                              className={`text-xs font-bold px-2 py-0.5 rounded ${
+                                trade.type === "LONG"
+                                  ? "bg-emerald-900/40 text-emerald-400"
+                                  : "bg-red-900/40 text-red-400"
+                              }`}
+                            >
+                              {trade.type}
+                            </span>
+                            <span className="font-mono text-gray-400 text-xs">
+                              ${trade.entryPrice.toFixed(4)}
+                            </span>
+                            <ChevronRight className="w-3 h-3 text-gray-600" />
+                            <span className="font-mono text-gray-400 text-xs">
+                              ${trade.exitPrice?.toFixed(4)}
+                            </span>
+                            {trade.reason && (
+                              <span className="text-gray-600 text-xs hidden md:inline truncate max-w-32">
+                                {trade.reason.split("|")[0].trim()}
+                              </span>
+                            )}
+                          </div>
                           <span
-                            className={
-                              trade.type === "LONG"
-                                ? "text-emerald-700"
-                                : "text-red-700"
-                            }
+                            className={`font-bold ${trade.result === "WIN" ? "text-emerald-400" : "text-red-400"}`}
                           >
-                            {trade.type === "LONG"
-                              ? "↑ máx favorable:"
-                              : "↓ mín favorable:"}{" "}
-                            ${trade.peakPrice.toFixed(4)}
+                            {trade.pnl && trade.pnl >= 0 ? "+" : ""}
+                            {trade.pnl?.toFixed(2)} USDT
                           </span>
-                        )}
-                        {trade.troughPrice && (
-                          <span
-                            className={
-                              trade.type === "LONG"
-                                ? "text-red-700"
-                                : "text-emerald-700"
-                            }
-                          >
-                            {trade.type === "LONG"
-                              ? "↓ mín adverso:"
-                              : "↑ máx adverso:"}{" "}
-                            ${trade.troughPrice.toFixed(4)}
-                          </span>
+                        </div>
+                        {(trade.peakPrice || trade.troughPrice) && (
+                          <div className="flex gap-4 mt-1 text-xs">
+                            {trade.peakPrice && (
+                              <span className="text-emerald-700">
+                                {trade.type === "LONG"
+                                  ? "↑ máx favorable:"
+                                  : "↓ mín favorable:"}{" "}
+                                ${trade.peakPrice.toFixed(4)}
+                              </span>
+                            )}
+                            {trade.troughPrice && (
+                              <span className="text-red-700">
+                                {trade.type === "LONG"
+                                  ? "↓ mín adverso:"
+                                  : "↑ máx adverso:"}{" "}
+                                ${trade.troughPrice.toFixed(4)}
+                              </span>
+                            )}
+                          </div>
                         )}
                       </div>
-                    )}
-                  </div>
-                ))}
+                    ))}
+                </div>
+              </div>
+            )}
           </>
         )}
 
