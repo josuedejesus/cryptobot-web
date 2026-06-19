@@ -82,17 +82,22 @@ export default function Home() {
   // Compute unrealized PnL
   let unrealizedPnl: number | null = null;
   let progressPct = 0;
+
   if (lastSignal && summary?.activeTrade) {
     const cp = lastSignal.price;
     const ep = summary.activeTrade.entryPrice;
     const ps = config?.positionSize ?? 100;
+    const tpDistance =
+      summary.activeTrade.type === "LONG"
+        ? (summary.activeTrade.takeProfit - summary.activeTrade.entryPrice) /
+          summary.activeTrade.entryPrice
+        : (summary.activeTrade.entryPrice - summary.activeTrade.takeProfit) /
+          summary.activeTrade.entryPrice;
+
     const pc =
       summary.activeTrade.type === "LONG" ? (cp - ep) / ep : (ep - cp) / ep;
     unrealizedPnl = ps * pc;
-    progressPct = Math.min(
-      Math.abs(pc / (config?.takeProfitPercent ?? 0.01)) * 100,
-      100,
-    );
+    progressPct = Math.min(Math.abs(pc / tpDistance) * 100, 100);
   }
 
   return (
