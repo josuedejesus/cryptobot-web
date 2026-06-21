@@ -24,7 +24,7 @@ const SYMBOLS = [
   "BNBUSDT",
   "SOLUSDT",
 ];
-const TIMEFRAMES = ["3m", "5m", "15m"];
+const TIMEFRAMES = ["3m", "5m", "30m"];
 
 export default function Home() {
   const {
