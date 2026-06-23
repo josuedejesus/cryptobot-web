@@ -75,6 +75,8 @@ export interface BotConfig {
   minBandWidth: number;
   trendTimeframe: string;
   isPaused: boolean;
+  marketType: string;
+  leverage: number;
 }
 
 export function useBot() {
@@ -84,14 +86,15 @@ export function useBot() {
   const [config, setConfig] = useState<BotConfig | null>(null);
 
   useEffect(() => {
-    console.log("API URL:", API);
-    console.log("ENV:", process.env.NEXT_PUBLIC_API_URL);
-    fetch(`${API}/paper-trade/summary`)
-      .then((r) => r.json())
-      .then(setSummary);
     fetch(`${API}/bot-config`)
       .then((r) => r.json())
-      .then(setConfig);
+      .then((cfg: BotConfig) => {
+        setConfig(cfg);
+        // Cargar summary con el endpoint correcto según mode
+        fetch(`${API}/${getEndpoint(cfg.mode)}/summary`)
+          .then((r) => r.json())
+          .then(setSummary);
+      });
 
     const socket: Socket = io(API);
     socket.on("connect", () => setConnected(true));
@@ -99,11 +102,17 @@ export function useBot() {
     socket.on("signal", (s: Signal) => setLastSignal(s));
     socket.on("summary", (s: Summary) => setSummary(s));
     socket.on("trade:opened", async () => {
-      const s = await fetch(`${API}/paper-trade/summary`).then((r) => r.json());
+      const cfg = await fetch(`${API}/bot-config`).then((r) => r.json());
+      const s = await fetch(`${API}/${getEndpoint(cfg.mode)}/summary`).then(
+        (r) => r.json(),
+      );
       setSummary(s);
     });
     socket.on("trade:closed", async () => {
-      const s = await fetch(`${API}/paper-trade/summary`).then((r) => r.json());
+      const cfg = await fetch(`${API}/bot-config`).then((r) => r.json());
+      const s = await fetch(`${API}/${getEndpoint(cfg.mode)}/summary`).then(
+        (r) => r.json(),
+      );
       setSummary(s);
     });
     return () => {
@@ -132,16 +141,17 @@ export function useBot() {
   };
 
   const closeActiveTrade = async () => {
-    const res = await fetch(`${API}/paper-trade/close`, {
-      method: "POST",
-    });
+    const endpoint = getEndpoint(config?.mode ?? "paper");
+    const res = await fetch(`${API}/${endpoint}/close`, { method: "POST" });
     const data = await res.json();
-    const summary = await fetch(`${API}/paper-trade/summary`).then((r) =>
-      r.json(),
-    );
-    setSummary(summary);
+    const s = await fetch(`${API}/${endpoint}/summary`).then((r) => r.json());
+    setSummary(s);
     return data;
   };
+
+  // Helper dinámico
+  const getEndpoint = (mode: string) =>
+    mode === "live" ? "live-trade" : "paper-trade";
 
   return {
     summary,
@@ -152,6 +162,4 @@ export function useBot() {
     applyPreset,
     closeActiveTrade,
   };
-
-  return { summary, lastSignal, connected, config, updateConfig, applyPreset };
 }

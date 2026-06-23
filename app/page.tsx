@@ -560,7 +560,6 @@ export default function Home() {
         {/* ── CONFIG ── */}
         {tab === "config" && config && (
           <>
-            {/* Bloqueo si hay trade activo */}
             {summary?.activeTrade && (
               <div className="bg-red-900/20 border border-red-700/40 rounded-xl px-4 py-3 flex items-center gap-3">
                 <X className="w-4 h-4 text-red-400 shrink-0" />
@@ -581,11 +580,7 @@ export default function Home() {
               </div>
             )}
             <div
-              className={
-                summary?.activeTrade
-                  ? "opacity-40 pointer-events-none select-none"
-                  : ""
-              }
+              className={`space-y-4 ${summary?.activeTrade ? "opacity-40 pointer-events-none select-none" : ""}`}
             >
               {/* Symbol */}
               <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
@@ -634,38 +629,26 @@ export default function Home() {
                 </p>
               </div>
 
-              {/* Risk */}
+              {/* Riesgo */}
               <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
                 <p className="text-xs text-gray-500 uppercase tracking-widest mb-4">
-                  Gestión de riesgo
+                  Riesgo
                 </p>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-2 gap-4">
                   {[
                     {
                       label: "Position Size (USDT)",
                       key: "positionSize",
                       type: "float",
                     },
-                    {
-                      label: "Stop Loss %",
-                      key: "stopLossPercent",
-                      type: "float",
-                      step: 0.001,
-                    },
-                    {
-                      label: "Take Profit %",
-                      key: "takeProfitPercent",
-                      type: "float",
-                      step: 0.001,
-                    },
-                  ].map(({ label, key, type, step }) => (
+                    { label: "Leverage", key: "leverage", type: "int" },
+                  ].map(({ label, key, type }) => (
                     <div key={key}>
                       <label className="text-xs text-gray-500 block mb-1">
                         {label}
                       </label>
                       <input
                         type="number"
-                        step={step}
                         value={(config as any)[key]}
                         onChange={(e) =>
                           handleConfigChange(
@@ -682,29 +665,27 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Indicators */}
+              {/* Señales */}
               <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
                 <p className="text-xs text-gray-500 uppercase tracking-widest mb-4">
-                  Indicadores
+                  Señales
                 </p>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   {[
-                    { label: "EMA Rápida", key: "emaFast", type: "int" },
-                    { label: "EMA Lenta", key: "emaSlow", type: "int" },
                     { label: "RSI Período", key: "rsiPeriod", type: "int" },
                     { label: "RSI Mín", key: "rsiMin", type: "float" },
                     { label: "RSI Máx", key: "rsiMax", type: "float" },
-                    {
-                      label: "Max Trades/día",
-                      key: "maxTradesPerDay",
-                      type: "int",
-                    },
                     {
                       label: "Min Band Width %",
                       key: "minBandWidth",
                       type: "float",
                       step: 0.1,
                     },
+                    {
+                      label: "Max Trades/día",
+                      key: "maxTradesPerDay",
+                      type: "int",
+                    },
                   ].map(({ label, key, type, step }) => (
                     <div key={key}>
                       <label className="text-xs text-gray-500 block mb-1">
@@ -729,18 +710,13 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Toggles */}
+              {/* Opciones */}
               <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
                 <p className="text-xs text-gray-500 uppercase tracking-widest mb-4">
                   Opciones
                 </p>
                 <div className="space-y-4">
                   {[
-                    {
-                      key: "vwapStrict",
-                      label: "VWAP estricto",
-                      desc: "Solo opera en la dirección del VWAP del día",
-                    },
                     {
                       key: "onlyLong",
                       label: "Solo LONG",
@@ -773,6 +749,31 @@ export default function Home() {
                       </div>
                     );
                   })}
+
+                  {/* Modo */}
+                  <div className="flex items-center justify-between pt-2 border-t border-gray-800">
+                    <div>
+                      <p className="text-sm font-medium">Modo</p>
+                      <p className="text-xs text-gray-500">
+                        {config.mode === "live"
+                          ? "⚠️ Operando con dinero real"
+                          : "Simulación sin riesgo"}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() =>
+                        handleConfigChange(
+                          "mode",
+                          config.mode === "paper" ? "live" : "paper",
+                        )
+                      }
+                      className={`relative w-11 h-6 rounded-full transition-colors ${config.mode === "live" ? "bg-red-600" : "bg-gray-700"}`}
+                    >
+                      <span
+                        className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${config.mode === "live" ? "translate-x-5" : "translate-x-0"}`}
+                      />
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
