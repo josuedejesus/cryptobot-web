@@ -14,6 +14,8 @@ import {
   Play,
   X,
   ChevronRight,
+  ClipboardCopy,
+  BarChart2,
 } from "lucide-react";
 
 const SYMBOLS = [
@@ -36,6 +38,7 @@ export default function Home() {
     updateConfig,
     applyPreset,
     closeActiveTrade,
+    getSnapshot,
   } = useBot();
   const [tab, setTab] = useState<"dashboard" | "config">("dashboard");
   const [saving, setSaving] = useState(false);
@@ -143,6 +146,7 @@ export default function Home() {
               )}
             </button>
           )}
+
           <div
             className={`flex items-center gap-1 text-xs ${connected ? "text-emerald-400" : "text-red-400"}`}
           >
@@ -428,67 +432,84 @@ export default function Home() {
                   <p className="text-xs text-gray-500 uppercase tracking-widest">
                     Historial
                   </p>
-                  <button
-                    onClick={() => {
-                      if (!summary) return;
-                      const trades = summary.trades.filter((t) => t.result);
-                      const byReason = trades.reduce(
-                        (acc, t) => {
-                          const key =
-                            t.reason?.split("|")[0].trim() ?? "Desconocido";
-                          if (!acc[key])
-                            acc[key] = { wins: 0, losses: 0, pnl: 0 };
-                          if (t.result === "WIN") acc[key].wins++;
-                          else acc[key].losses++;
-                          acc[key].pnl += t.pnl ?? 0;
-                          return acc;
-                        },
-                        {} as Record<
-                          string,
-                          { wins: number; losses: number; pnl: number }
-                        >,
-                      );
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={async () => {
+                        if (!getSnapshot) return;
+                        const data = await getSnapshot();
+                        navigator.clipboard.writeText(
+                          JSON.stringify(data, null, 2),
+                        );
+                        alert("✅ Snapshot copiado al clipboard");
+                      }}
+                      className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 text-xs font-medium rounded-lg transition-colors"
+                      title="Copiar snapshot para análisis"
+                    >
+                      <ClipboardCopy className="w-3 h-3" /> Snapshot
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (!summary) return;
+                        const trades = summary.trades.filter((t) => t.result);
+                        const byReason = trades.reduce(
+                          (acc, t) => {
+                            const key =
+                              t.reason?.split("|")[0].trim() ?? "Desconocido";
+                            if (!acc[key])
+                              acc[key] = { wins: 0, losses: 0, pnl: 0 };
+                            if (t.result === "WIN") acc[key].wins++;
+                            else acc[key].losses++;
+                            acc[key].pnl += t.pnl ?? 0;
+                            return acc;
+                          },
+                          {} as Record<
+                            string,
+                            { wins: number; losses: number; pnl: number }
+                          >,
+                        );
 
-                      const report = {
-                        resumen: {
-                          totalTrades: trades.length,
-                          wins: trades.filter((t) => t.result === "WIN").length,
-                          losses: trades.filter((t) => t.result === "LOSS")
-                            .length,
-                          winRate: summary.winRate,
-                          pnlTotal: summary.totalPnl,
-                          balance: summary.balance,
-                        },
-                        porSenal: Object.entries(byReason).map(
-                          ([signal, data]) => ({
-                            signal,
-                            wins: data.wins,
-                            losses: data.losses,
-                            winRate: `${((data.wins / (data.wins + data.losses)) * 100).toFixed(0)}%`,
-                            pnl: data.pnl.toFixed(2),
-                          }),
-                        ),
-                        trades: trades.map((t) => ({
-                          type: t.type,
-                          entry: t.entryPrice.toFixed(4),
-                          exit: t.exitPrice?.toFixed(4),
-                          pnl: t.pnl?.toFixed(2),
-                          result: t.result,
-                          reason: t.reason,
-                          peakFavorable: t.peakPrice?.toFixed(4),
-                          peakAdverso: t.troughPrice?.toFixed(4),
-                        })),
-                      };
+                        const report = {
+                          resumen: {
+                            totalTrades: trades.length,
+                            wins: trades.filter((t) => t.result === "WIN")
+                              .length,
+                            losses: trades.filter((t) => t.result === "LOSS")
+                              .length,
+                            winRate: summary.winRate,
+                            pnlTotal: summary.totalPnl,
+                            balance: summary.balance,
+                          },
+                          porSenal: Object.entries(byReason).map(
+                            ([signal, data]) => ({
+                              signal,
+                              wins: data.wins,
+                              losses: data.losses,
+                              winRate: `${((data.wins / (data.wins + data.losses)) * 100).toFixed(0)}%`,
+                              pnl: data.pnl.toFixed(2),
+                            }),
+                          ),
+                          trades: trades.map((t) => ({
+                            type: t.type,
+                            entry: t.entryPrice.toFixed(4),
+                            exit: t.exitPrice?.toFixed(4),
+                            pnl: t.pnl?.toFixed(2),
+                            result: t.result,
+                            reason: t.reason,
+                            peakFavorable: t.peakPrice?.toFixed(4),
+                            peakAdverso: t.troughPrice?.toFixed(4),
+                          })),
+                        };
 
-                      navigator.clipboard.writeText(
-                        JSON.stringify(report, null, 2),
-                      );
-                      alert("✅ Datos copiados al clipboard");
-                    }}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 text-xs font-medium rounded-lg transition-colors"
-                  >
-                    📊 Copiar análisis
-                  </button>
+                        navigator.clipboard.writeText(
+                          JSON.stringify(report, null, 2),
+                        );
+                        alert("✅ Datos copiados al clipboard");
+                      }}
+                      className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 text-xs font-medium rounded-lg transition-colors"
+                    >
+                      <BarChart2 className="w-3 h-3" /> Copiar análisis
+                    </button>
+                  </div>
                 </div>
 
                 <div className="space-y-1">

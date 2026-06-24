@@ -149,6 +149,23 @@ export function useBot() {
     return data;
   };
 
+  const getSnapshot = async () => {
+    const res = await fetch(`${API}/bot/snapshot`);
+    const data = await res.json();
+    return data;
+  };
+
+  return {
+    summary,
+    lastSignal,
+    connected,
+    config,
+    updateConfig,
+    applyPreset,
+    closeActiveTrade,
+    getSnapshot, // 👈
+  };
+
   // Helper dinámico
   const getEndpoint = (mode: string) =>
     mode === "live" ? "live-trade" : "paper-trade";
