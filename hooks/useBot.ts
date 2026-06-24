@@ -155,17 +155,6 @@ export function useBot() {
     return data;
   };
 
-  return {
-    summary,
-    lastSignal,
-    connected,
-    config,
-    updateConfig,
-    applyPreset,
-    closeActiveTrade,
-    getSnapshot, // 👈
-  };
-
   // Helper dinámico
   const getEndpoint = (mode: string) =>
     mode === "live" ? "live-trade" : "paper-trade";
@@ -178,5 +167,6 @@ export function useBot() {
     updateConfig,
     applyPreset,
     closeActiveTrade,
+    getSnapshot, // 👈
   };
 }
