@@ -77,6 +77,42 @@ export interface BotConfig {
   isPaused: boolean;
   marketType: string;
   leverage: number;
+
+  // EMA Cross
+  emaCrossLongRsiMin: number;
+  emaCrossLongRsiMax: number;
+  emaCrossShortRsiMin: number;
+  emaCrossShortRsiMax: number;
+  emaCrossNeedsPrevCandle: boolean;
+
+  // RSI Momentum
+  rsiMomentumLongPrevMax: number;
+  rsiMomentumLongCurrMin: number;
+  rsiMomentumLongCurrMax: number;
+  rsiMomentumShortPrevMin: number;
+  rsiMomentumShortCurrMin: number;
+  rsiMomentumDelta: number;
+  rsiMomentumNeedsPrevCandle: boolean;
+  enableRsiMomLong: boolean;
+
+  // Divergencias
+  enableBullishDiv: boolean;
+  divLongRsiMax: number;
+  divLongPrevRsiMax: number;
+  enableBearishDiv: boolean;
+  divShortRsiMin: number;
+  divShortRsiMax: number;
+  divNeedsPrevCandle: boolean;
+
+  // BB Breakout
+  bbBreakoutLongRsiMin: number;
+  bbBreakoutLongRsiMax: number;
+  bbBreakoutShortRsiMin: number;
+  bbBreakoutShortRsiMax: number;
+  bbBreakoutNeedsTrend: boolean;
+
+  // Global
+  enableTrendFilter: boolean;
 }
 
 export function useBot() {
