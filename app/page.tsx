@@ -93,11 +93,13 @@ export default function Home() {
   if (lastSignal && summary?.activeTrade) {
     const cp = lastSignal.price;
     const ep = summary.activeTrade.entryPrice;
-    const ps = config?.positionSize ?? 100;
+    // notional real: margen × leverage, mismo criterio que backend
+    // (BacktestService y PaperTradeService.closeTrade)
+    const notional = (config?.positionSize ?? 100) * (config?.leverage ?? 1);
 
     const pc =
       summary.activeTrade.type === "LONG" ? (cp - ep) / ep : (ep - cp) / ep;
-    unrealizedPnl = ps * pc;
+    unrealizedPnl = notional * pc;
   }
 
   return (
