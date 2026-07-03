@@ -1,56 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Save, TrendingUp, TrendingDown, BarChart2, X, Compass } from "lucide-react";
-
-interface BotConfig {
-  symbol: string;
-  timeframe: string;
-  mode: string;
-  positionSize: number;
-  leverage: number;
-  minBandWidth: number;
-  trendTimeframe: string;
-  onlyLong: boolean;
-  onlyShort: boolean;
-  isPaused: boolean;
-
-  // EMA Cross
-  emaCrossLongRsiMin: number;
-  emaCrossLongRsiMax: number;
-  emaCrossShortRsiMin: number;
-  emaCrossShortRsiMax: number;
-  emaCrossNeedsPrevCandle: boolean;
-
-  // RSI Momentum
-  rsiMomentumLongPrevMax: number;
-  rsiMomentumLongCurrMin: number;
-  rsiMomentumLongCurrMax: number;
-  rsiMomentumShortPrevMin: number;
-  rsiMomentumShortCurrMin: number;
-  rsiMomentumDelta: number;
-  rsiMomentumNeedsPrevCandle: boolean;
-  enableRsiMomLong: boolean;
-
-  // Divergencia
-  enableBullishDiv: boolean;
-  divLongRsiMax: number;
-  divLongPrevRsiMax: number;
-  enableBearishDiv: boolean;
-  divShortRsiMin: number;
-  divShortRsiMax: number;
-  divNeedsPrevCandle: boolean;
-
-  // BB Breakout
-  bbBreakoutLongRsiMin: number;
-  bbBreakoutLongRsiMax: number;
-  bbBreakoutShortRsiMin: number;
-  bbBreakoutShortRsiMax: number;
-  bbBreakoutNeedsTrend: boolean;
-
-  // Global
-  enableTrendFilter: boolean;
-}
+import { Save, Activity, Waves, X, Compass, Target, Check } from "lucide-react";
+import { BotConfig } from "@/hooks/useBot";
 
 interface BotControllerProps {
   config: BotConfig;
@@ -80,19 +32,21 @@ function NumberField({
   hint?: string;
 }) {
   return (
-    <div>
+    <div className="min-w-0">
       <label className="text-xs text-gray-500 block mb-1">{label}</label>
       <input
         type="number"
+        inputMode="decimal"
         step={step}
         value={Number.isNaN(value) ? "" : value}
         onChange={(e) => {
           const raw = e.target.value;
           onChange(raw === "" ? NaN : parseFloat(raw));
         }}
-        className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-emerald-600"
+        // text-base (16px) evita que iOS Safari haga auto-zoom al enfocar
+        className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 text-white text-base sm:text-sm focus:outline-none focus:border-emerald-600"
       />
-      {hint && <p className="text-[11px] text-gray-600 mt-1">{hint}</p>}
+      {hint && <p className="text-[11px] text-gray-600 mt-1 leading-snug">{hint}</p>}
     </div>
   );
 }
@@ -111,14 +65,19 @@ function ToggleField({
   danger?: boolean;
 }) {
   return (
-    <div className="flex items-center justify-between">
-      <div>
+    // Toda la fila es tappable, no solo el switch — área de toque más
+    // grande y confiable en mobile (mínimo ~44px de alto recomendado).
+    <button
+      type="button"
+      onClick={() => onChange(!value)}
+      className="w-full flex items-center justify-between gap-3 py-2 -mx-1 px-1 rounded-lg active:bg-gray-800/60 transition-colors text-left"
+    >
+      <div className="min-w-0">
         <p className="text-sm font-medium">{label}</p>
-        {hint && <p className="text-xs text-gray-500">{hint}</p>}
+        {hint && <p className="text-xs text-gray-500 mt-0.5">{hint}</p>}
       </div>
-      <button
-        onClick={() => onChange(!value)}
-        className={`relative w-11 h-6 rounded-full transition-colors ${
+      <span
+        className={`relative w-11 h-6 shrink-0 rounded-full transition-colors ${
           value ? (danger ? "bg-red-600" : "bg-emerald-600") : "bg-gray-700"
         }`}
       >
@@ -127,8 +86,8 @@ function ToggleField({
             value ? "translate-x-5" : "translate-x-0"
           }`}
         />
-      </button>
-    </div>
+      </span>
+    </button>
   );
 }
 
@@ -142,7 +101,7 @@ function SectionCard({
   children: React.ReactNode;
 }) {
   return (
-    <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
+    <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-5">
       <div className="flex items-center gap-2 mb-4">
         {icon}
         <p className="text-xs text-gray-500 uppercase tracking-widest">
@@ -180,19 +139,34 @@ export default function BotController({
   };
 
   return (
-    <div className="space-y-4">
+    // pb-24 deja espacio para que la barra fija de "Guardar" (mobile) no
+    // tape el final del contenido al hacer scroll.
+    <div className="max-w-2xl mx-auto space-y-4 pb-24 sm:pb-4">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-3">
         <h2 className="font-semibold text-sm text-white">
           Configuración del Bot
         </h2>
-        
+        {/* Botón de guardar visible en desktop; en mobile se usa la barra
+            fija de abajo para no competir con el header al hacer scroll. */}
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          className={`hidden sm:flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+            saved
+              ? "bg-gray-800 text-emerald-400 border border-emerald-700/40"
+              : "bg-emerald-600 text-white hover:bg-emerald-500"
+          } disabled:opacity-60`}
+        >
+          <Save className="w-3.5 h-3.5" />
+          {saving ? "Guardando..." : saved ? "¡Guardado!" : "Guardar cambios"}
+        </button>
       </div>
 
       {activeTrade && (
-        <div className="bg-red-900/20 border border-red-700/40 rounded-xl px-4 py-3 flex items-center gap-3">
-          <X className="w-4 h-4 text-red-400 shrink-0" />
-          <div>
+        <div className="bg-red-900/20 border border-red-700/40 rounded-xl px-4 py-3 flex items-start gap-3">
+          <X className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
+          <div className="min-w-0">
             <p className="text-red-400 text-sm font-medium">
               Trade activo en curso
             </p>
@@ -215,25 +189,25 @@ export default function BotController({
       >
         {/* General */}
         <SectionCard title="General">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="min-w-0">
               <label className="text-xs text-gray-500 block mb-1">
                 Símbolo
               </label>
               <input
                 value={form.symbol}
                 onChange={(e) => set("symbol", e.target.value)}
-                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-emerald-600"
+                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 text-white text-base sm:text-sm focus:outline-none focus:border-emerald-600"
               />
             </div>
-            <div>
+            <div className="min-w-0">
               <label className="text-xs text-gray-500 block mb-1">
                 Tendencia
               </label>
               <select
                 value={form.trendTimeframe}
                 onChange={(e) => set("trendTimeframe", e.target.value)}
-                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-emerald-600"
+                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 text-white text-base sm:text-sm focus:outline-none focus:border-emerald-600"
               >
                 {TREND_TIMEFRAMES.map((t) => (
                   <option key={t} value={t}>
@@ -248,12 +222,14 @@ export default function BotController({
             <label className="text-xs text-gray-500 block mb-2">
               Timeframe
             </label>
-            <div className="flex gap-2">
+            {/* grid en vez de flex: garantiza que los 4 botones siempre
+                entren en una fila, sin desbordar en pantallas angostas. */}
+            <div className="grid grid-cols-4 gap-2">
               {TIMEFRAMES.map((tf) => (
                 <button
                   key={tf}
                   onClick={() => set("timeframe", tf)}
-                  className={`px-5 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  className={`px-2 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                     form.timeframe === tf
                       ? "bg-emerald-600 text-white"
                       : "bg-gray-800 text-gray-400 hover:text-white hover:bg-gray-700"
@@ -265,7 +241,7 @@ export default function BotController({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4 mt-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-4">
             <NumberField
               label="Position Size (USDT)"
               value={form.positionSize}
@@ -276,15 +252,18 @@ export default function BotController({
               value={form.leverage}
               onChange={(v) => set("leverage", v)}
             />
-            <NumberField
-              label="Min Band Width %"
-              value={form.minBandWidth}
-              onChange={(v) => set("minBandWidth", v)}
-              step={0.1}
-            />
+            <div className="col-span-2 sm:col-span-1">
+              <NumberField
+                label="Min Band Width %"
+                value={form.minBandWidth}
+                onChange={(v) => set("minBandWidth", v)}
+                step={0.1}
+                hint="Mercado por debajo de esto se ignora (comprimido)"
+              />
+            </div>
           </div>
 
-          <div className="space-y-4 mt-4 pt-4 border-t border-gray-800">
+          <div className="space-y-1 mt-4 pt-4 border-t border-gray-800">
             <ToggleField
               label="Solo LONG"
               value={form.onlyLong}
@@ -304,8 +283,8 @@ export default function BotController({
               hint="Detiene la ejecución de nuevas entradas"
               danger
             />
-            <div className="flex items-center justify-between pt-2 border-t border-gray-800">
-              <div>
+            <div className="flex items-center justify-between pt-3 mt-2 border-t border-gray-800">
+              <div className="min-w-0">
                 <p className="text-sm font-medium">Modo</p>
                 <p className="text-xs text-gray-500">
                   {form.mode === "live"
@@ -317,7 +296,7 @@ export default function BotController({
                 onClick={() =>
                   set("mode", form.mode === "paper" ? "live" : "paper")
                 }
-                className={`relative w-11 h-6 rounded-full transition-colors ${
+                className={`relative w-11 h-6 shrink-0 rounded-full transition-colors ${
                   form.mode === "live" ? "bg-red-600" : "bg-gray-700"
                 }`}
               >
@@ -331,222 +310,247 @@ export default function BotController({
           </div>
         </SectionCard>
 
-        {/* EMA Cross */}
+        {/* Stochastic RSI */}
         <SectionCard
-          title="Cruce de EMA"
-          icon={<TrendingUp className="w-3.5 h-3.5 text-emerald-500" />}
+          title="Stochastic RSI"
+          icon={<Activity className="w-3.5 h-3.5 text-blue-500" />}
         >
-          <p className="text-[11px] text-gray-600 mb-3">LONG (cruce alcista)</p>
+          <p className="text-[11px] text-gray-600 mb-3">
+            Evento de entrada: cruce de %K sobre/bajo %D saliendo de zona
+            extrema.
+          </p>
           <div className="grid grid-cols-2 gap-4">
             <NumberField
-              label="RSI mín."
-              value={form.emaCrossLongRsiMin}
-              onChange={(v) => set("emaCrossLongRsiMin", v)}
+              label="RSI período"
+              value={form.stochRsiRsiPeriod}
+              onChange={(v) => set("stochRsiRsiPeriod", v)}
             />
             <NumberField
-              label="RSI máx."
-              value={form.emaCrossLongRsiMax}
-              onChange={(v) => set("emaCrossLongRsiMax", v)}
-            />
-          </div>
-          <p className="text-[11px] text-gray-600 mt-4 mb-3">SHORT (cruce bajista)</p>
-          <div className="grid grid-cols-2 gap-4">
-            <NumberField
-              label="RSI mín."
-              value={form.emaCrossShortRsiMin}
-              onChange={(v) => set("emaCrossShortRsiMin", v)}
+              label="Stochastic período"
+              value={form.stochRsiStochPeriod}
+              onChange={(v) => set("stochRsiStochPeriod", v)}
             />
             <NumberField
-              label="RSI máx."
-              value={form.emaCrossShortRsiMax}
-              onChange={(v) => set("emaCrossShortRsiMax", v)}
-            />
-          </div>
-          <div className="mt-4 pt-4 border-t border-gray-800">
-            <ToggleField
-              label="Requiere vela anterior confirmada"
-              value={form.emaCrossNeedsPrevCandle}
-              onChange={(v) => set("emaCrossNeedsPrevCandle", v)}
-              hint="Filtra cruces prematuros"
-            />
-          </div>
-        </SectionCard>
-
-        {/* RSI Momentum */}
-        <SectionCard
-          title="RSI Momentum"
-          icon={<BarChart2 className="w-3.5 h-3.5 text-blue-500" />}
-        >
-          <p className="text-[11px] text-gray-600 mb-3">LONG (rebote desde oversold)</p>
-          <div className="grid grid-cols-3 gap-4">
-            <NumberField
-              label="prevRSI máx."
-              value={form.rsiMomentumLongPrevMax}
-              onChange={(v) => set("rsiMomentumLongPrevMax", v)}
+              label="%K período"
+              value={form.stochRsiKPeriod}
+              onChange={(v) => set("stochRsiKPeriod", v)}
             />
             <NumberField
-              label="RSI mín. actual"
-              value={form.rsiMomentumLongCurrMin}
-              onChange={(v) => set("rsiMomentumLongCurrMin", v)}
-            />
-            <NumberField
-              label="RSI máx. actual"
-              value={form.rsiMomentumLongCurrMax}
-              onChange={(v) => set("rsiMomentumLongCurrMax", v)}
-            />
-          </div>
-          <p className="text-[11px] text-gray-600 mt-4 mb-3">SHORT (caída desde overbought)</p>
-          <div className="grid grid-cols-2 gap-4">
-            <NumberField
-              label="prevRSI mín."
-              value={form.rsiMomentumShortPrevMin}
-              onChange={(v) => set("rsiMomentumShortPrevMin", v)}
-            />
-            <NumberField
-              label="RSI mín. actual"
-              value={form.rsiMomentumShortCurrMin}
-              onChange={(v) => set("rsiMomentumShortCurrMin", v)}
+              label="%D período"
+              value={form.stochRsiDPeriod}
+              onChange={(v) => set("stochRsiDPeriod", v)}
             />
           </div>
           <div className="grid grid-cols-2 gap-4 mt-4">
             <NumberField
-              label="Delta máx."
-              value={form.rsiMomentumDelta}
-              onChange={(v) => set("rsiMomentumDelta", v)}
-              hint="Cambio máx. de RSI entre velas (ambas direcciones)"
+              label="Sobreventa (LONG)"
+              value={form.stochRsiOversold}
+              onChange={(v) => set("stochRsiOversold", v)}
+              hint="Cruce alcista solo si venía bajo este nivel"
             />
-          </div>
-          <div className="space-y-4 mt-4 pt-4 border-t border-gray-800">
-            <ToggleField
-              label="Activar RSI Momentum alcista"
-              value={form.enableRsiMomLong}
-              onChange={(v) => set("enableRsiMomLong", v)}
-            />
-            <ToggleField
-              label="Requiere vela anterior confirmada"
-              value={form.rsiMomentumNeedsPrevCandle}
-              onChange={(v) => set("rsiMomentumNeedsPrevCandle", v)}
+            <NumberField
+              label="Sobrecompra (SHORT)"
+              value={form.stochRsiOverbought}
+              onChange={(v) => set("stochRsiOverbought", v)}
+              hint="Cruce bajista solo si venía sobre este nivel"
             />
           </div>
         </SectionCard>
 
-        {/* Divergencias */}
+        {/* Squeeze Release + ATR Expansion */}
         <SectionCard
-          title="Divergencias"
-          icon={<TrendingDown className="w-3.5 h-3.5 text-purple-500" />}
+          title="Squeeze Release + ATR Expansion"
+          icon={<Waves className="w-3.5 h-3.5 text-amber-500" />}
         >
-          <p className="text-[11px] text-gray-600 mb-3">LONG (divergencia alcista)</p>
-          <div className="grid grid-cols-2 gap-4">
+          <p className="text-[11px] text-gray-600 mb-3">
+            Evento de entrada: las bandas de Bollinger se liberan tras
+            compresión y el ATR confirma que el movimiento tiene fuerza real. La
+            dirección la da la alineación de EMA9/EMA21 — no tiene parámetros
+            propios además del peso en el score (abajo) y el umbral de squeeze
+            en Riesgo/ATR.
+          </p>
+        </SectionCard>
+
+        {/* VWAP Reversion */}
+        <SectionCard
+          title="VWAP Reversion"
+          icon={<Compass className="w-3.5 h-3.5 text-purple-500" />}
+        >
+          <p className="text-[11px] text-gray-600 mb-3">
+            Evento de entrada: el precio toca/cruza el VWAP desde el lado
+            contrario y cierra de vuelta del lado original — rechazo confirmado.
+            No tiene parámetros propios además del peso en el score (abajo).
+          </p>
+        </SectionCard>
+
+        {/* Riesgo */}
+        <SectionCard
+          title="Riesgo — SL inicial + Trailing Stop"
+          icon={<Target className="w-3.5 h-3.5 text-amber-400" />}
+        >
+          <p className="text-[11px] text-gray-600 mb-3">
+            El SL inicial protege apenas abre el trade. Una vez que el precio se
+            mueve a favor lo suficiente, el trailing stop lo sigue de cerca —
+            sin techo de TP fijo, deja correr los movimientos grandes.
+          </p>
+          <div className="grid grid-cols-2 gap-4 mb-4">
             <NumberField
-              label="RSI máx."
-              value={form.divLongRsiMax}
-              onChange={(v) => set("divLongRsiMax", v)}
+              label="ATR período"
+              value={form.atrPeriod}
+              onChange={(v) => set("atrPeriod", v)}
             />
             <NumberField
-              label="prevRSI máx."
-              value={form.divLongPrevRsiMax}
-              onChange={(v) => set("divLongPrevRsiMax", v)}
+              label="SL inicial × ATR"
+              value={form.slAtrMultiplier}
+              onChange={(v) => set("slAtrMultiplier", v)}
+              step={0.25}
+              hint="Distancia del stop loss antes de activar trailing"
             />
           </div>
-          <p className="text-[11px] text-gray-600 mt-4 mb-3">SHORT (divergencia bajista)</p>
-          <div className="grid grid-cols-2 gap-4">
-            <NumberField
-              label="RSI mín."
-              value={form.divShortRsiMin}
-              onChange={(v) => set("divShortRsiMin", v)}
+          <div className="pt-4 border-t border-gray-800">
+            <ToggleField
+              label="Activar Trailing Stop"
+              value={form.enableTrailingStop}
+              onChange={(v) => set("enableTrailingStop", v)}
+              hint="Off = solo SL fijo, sin TP (no recomendado)"
             />
+            <div className="grid grid-cols-2 gap-4 mt-4">
+              <NumberField
+                label="Activación (%)"
+                value={form.trailingActivationPct}
+                onChange={(v) => set("trailingActivationPct", v)}
+                step={0.001}
+                hint="Ganancia mínima para empezar a trailear"
+              />
+              <NumberField
+                label="Distancia (%)"
+                value={form.trailingDistancePct}
+                onChange={(v) => set("trailingDistancePct", v)}
+                step={0.001}
+                hint="Qué tan cerca sigue el trailing al precio"
+              />
+            </div>
+          </div>
+        </SectionCard>
+
+        {/* Score compuesto */}
+        <SectionCard
+          title="Score compuesto"
+          icon={<Target className="w-3.5 h-3.5 text-emerald-400" />}
+        >
+          <p className="text-[11px] text-gray-600 mb-4">
+            Solo dos eventos abren la entrada: Stoch RSI y Squeeze Release + ATR
+            Expansion. Volumen, Tendencia y VWAP son confirmaciones — nunca
+            abren entrada por sí solas, solo suman o restan puntos. Entra si el
+            total supera el mínimo y le gana claramente a la dirección
+            contraria.
+          </p>
+          <div className="mb-4">
             <NumberField
-              label="RSI máx."
-              value={form.divShortRsiMax}
-              onChange={(v) => set("divShortRsiMax", v)}
+              label="Score mínimo para entrar"
+              value={form.scoreMinToEnter}
+              onChange={(v) => set("scoreMinToEnter", v)}
+              step={0.5}
+              hint="Más alto = más selectivo, menos trades"
             />
           </div>
-          <div className="space-y-4 mt-4 pt-4 border-t border-gray-800">
-            <ToggleField
-              label="Activar Divergencia alcista"
-              value={form.enableBullishDiv}
-              onChange={(v) => set("enableBullishDiv", v)}
+          <p className="text-[11px] text-gray-600 mb-3">Puntos por factor</p>
+          <div className="grid grid-cols-2 gap-4">
+            <NumberField
+              label="Stoch RSI cruce"
+              value={form.scoreStochRsiCross}
+              onChange={(v) => set("scoreStochRsiCross", v)}
+              step={0.5}
             />
-            <ToggleField
-              label="Activar Divergencia bajista"
-              value={form.enableBearishDiv}
-              onChange={(v) => set("enableBearishDiv", v)}
+            <NumberField
+              label="Squeeze + ATR Expansion"
+              value={form.scoreSqueezeExpansion}
+              onChange={(v) => set("scoreSqueezeExpansion", v)}
+              step={0.5}
             />
-            <ToggleField
-              label="Divergencia bajista requiere vela anterior"
-              value={form.divNeedsPrevCandle}
-              onChange={(v) => set("divNeedsPrevCandle", v)}
+            <NumberField
+              label="Volumen alto"
+              value={form.scoreVolumeHigh}
+              onChange={(v) => set("scoreVolumeHigh", v)}
+              step={0.5}
+            />
+            <NumberField
+              label="Tendencia a favor"
+              value={form.scoreTrendAligned}
+              onChange={(v) => set("scoreTrendAligned", v)}
+              step={0.5}
+              hint="Negativo si va en contra"
+            />
+            <NumberField
+              label="Sobre/bajo VWAP"
+              value={form.scoreVwapAligned}
+              onChange={(v) => set("scoreVwapAligned", v)}
+              step={0.5}
+            />
+            <NumberField
+              label="VWAP Reversion"
+              value={form.scoreVwapReversion}
+              onChange={(v) => set("scoreVwapReversion", v)}
+              step={0.5}
             />
           </div>
         </SectionCard>
 
-        {/* BB Breakout */}
+        {/* Breakeven Stop */}
         <SectionCard
-          title="Bollinger Breakout"
-          icon={<BarChart2 className="w-3.5 h-3.5 text-amber-500" />}
+          title="Breakeven Stop"
+          icon={<Target className="w-3.5 h-3.5 text-cyan-400" />}
         >
-          <p className="text-[11px] text-gray-600 mb-3">LONG (ruptura banda superior)</p>
-          <div className="grid grid-cols-2 gap-4">
-            <NumberField
-              label="RSI mín."
-              value={form.bbBreakoutLongRsiMin}
-              onChange={(v) => set("bbBreakoutLongRsiMin", v)}
-            />
-            <NumberField
-              label="RSI máx."
-              value={form.bbBreakoutLongRsiMax}
-              onChange={(v) => set("bbBreakoutLongRsiMax", v)}
-            />
-          </div>
-          <p className="text-[11px] text-gray-600 mt-4 mb-3">SHORT (ruptura banda inferior)</p>
-          <div className="grid grid-cols-2 gap-4">
-            <NumberField
-              label="RSI mín."
-              value={form.bbBreakoutShortRsiMin}
-              onChange={(v) => set("bbBreakoutShortRsiMin", v)}
-            />
-            <NumberField
-              label="RSI máx."
-              value={form.bbBreakoutShortRsiMax}
-              onChange={(v) => set("bbBreakoutShortRsiMax", v)}
-            />
-          </div>
-          <div className="mt-4 pt-4 border-t border-gray-800">
-            <ToggleField
-              label="Requiere tendencia + vela anterior alineadas"
-              value={form.bbBreakoutNeedsTrend}
-              onChange={(v) => set("bbBreakoutNeedsTrend", v)}
-              hint="Off = versión permisiva (sin filtro de tendencia)"
-            />
-          </div>
-        </SectionCard>
-
-        {/* Global */}
-        <SectionCard
-          title="Filtros globales"
-          icon={<Compass className="w-3.5 h-3.5 text-gray-400" />}
-        >
+          <p className="text-[11px] text-gray-600 mb-3">
+            Protección temprana e independiente del trailing: apenas el precio
+            se mueve un poco a favor, el stop se mueve al precio de entrada (+
+            un pequeño colchón). No reemplaza al trailing — solo evita que un
+            trade que llegó a estar en ganancia termine cerrando en pérdida
+            grande si revierte antes de activar el trailing.
+          </p>
           <ToggleField
-            label="Filtro de tendencia global"
-            value={form.enableTrendFilter}
-            onChange={(v) => set("enableTrendFilter", v)}
-            hint="Bloquea señales LONG en tendencia bajista y viceversa. Off = versión permisiva vieja"
+            label="Activar Breakeven Stop"
+            value={form.enableBreakeven}
+            onChange={(v) => set("enableBreakeven", v)}
           />
+          <div className="grid grid-cols-2 gap-4 mt-4">
+            <NumberField
+              label="Activación (%)"
+              value={form.breakevenActivationPct}
+              onChange={(v) => set("breakevenActivationPct", v)}
+              step={0.0005}
+              hint="Ganancia mínima para mover el stop a breakeven"
+            />
+            <NumberField
+              label="Colchón (%)"
+              value={form.breakevenOffsetPct}
+              onChange={(v) => set("breakevenOffsetPct", v)}
+              step={0.0001}
+              hint="Margen sobre el entry para cubrir fees"
+            />
+          </div>
         </SectionCard>
       </div>
 
-      {/* Footer save */}
-      <div className="flex justify-end pt-2">
+      {/* Barra de guardar fija — solo mobile. En desktop el botón vive en
+          el header, así que esta barra queda oculta (sm:hidden). El
+          padding-bottom usa env(safe-area-inset-bottom) para no quedar
+          tapada por la barra de gestos en iPhones con notch. */}
+      <div className="sm:hidden fixed bottom-0 left-0 right-0 z-20 bg-gray-950/95 backdrop-blur border-t border-gray-800 px-4 pt-3 [padding-bottom:max(0.75rem,env(safe-area-inset-bottom))]">
         <button
           onClick={handleSave}
           disabled={saving}
-          className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+          className={`w-full flex items-center justify-center gap-1.5 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
             saved
               ? "bg-gray-800 text-emerald-400 border border-emerald-700/40"
-              : "bg-emerald-600 text-white hover:bg-emerald-500"
+              : "bg-emerald-600 text-white active:bg-emerald-500"
           } disabled:opacity-60`}
         >
-          <Save className="w-3.5 h-3.5" />
+          {saved ? (
+            <Check className="w-4 h-4" />
+          ) : (
+            <Save className="w-4 h-4" />
+          )}
           {saving ? "Guardando..." : saved ? "¡Guardado!" : "Guardar cambios"}
         </button>
       </div>

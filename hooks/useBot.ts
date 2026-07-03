@@ -48,8 +48,10 @@ export interface Signal {
   reason: string;
 }
 
-export interface BotConfig {
+export type BotConfig = {
   id: number;
+  name: string;
+  isActive: boolean;
   symbol: string;
   timeframe: string;
   emaFast: number;
@@ -77,43 +79,40 @@ export interface BotConfig {
   isPaused: boolean;
   marketType: string;
   leverage: number;
+  atrPeriod: number;
+  slAtrMultiplier: number;
 
-  // EMA Cross
-  emaCrossLongRsiMin: number;
-  emaCrossLongRsiMax: number;
-  emaCrossShortRsiMin: number;
-  emaCrossShortRsiMax: number;
-  emaCrossNeedsPrevCandle: boolean;
+  // Score compuesto
+  scoreMinToEnter: number;
+  scoreVolumeHigh: number;
+  scoreTrendAligned: number;
+  scoreVwapAligned: number;
 
-  // RSI Momentum
-  rsiMomentumLongPrevMax: number;
-  rsiMomentumLongCurrMin: number;
-  rsiMomentumLongCurrMax: number;
-  rsiMomentumShortPrevMin: number;
-  rsiMomentumShortCurrMin: number;
-  rsiMomentumDelta: number;
-  rsiMomentumNeedsPrevCandle: boolean;
-  enableRsiMomLong: boolean;
+  // Stochastic RSI
+  stochRsiRsiPeriod: number;
+  stochRsiStochPeriod: number;
+  stochRsiKPeriod: number;
+  stochRsiDPeriod: number;
+  stochRsiOversold: number;
+  stochRsiOverbought: number;
+  scoreStochRsiCross: number;
 
-  // Divergencias
-  enableBullishDiv: boolean;
-  divLongRsiMax: number;
-  divLongPrevRsiMax: number;
-  enableBearishDiv: boolean;
-  divShortRsiMin: number;
-  divShortRsiMax: number;
-  divNeedsPrevCandle: boolean;
+  // Squeeze Release + ATR Expansion
+  scoreSqueezeExpansion: number;
 
-  // BB Breakout
-  bbBreakoutLongRsiMin: number;
-  bbBreakoutLongRsiMax: number;
-  bbBreakoutShortRsiMin: number;
-  bbBreakoutShortRsiMax: number;
-  bbBreakoutNeedsTrend: boolean;
+  // VWAP Reversion
+  scoreVwapReversion: number;
 
-  // Global
-  enableTrendFilter: boolean;
-}
+  // Trailing stop (reemplaza el TP fijo)
+  enableTrailingStop: boolean;
+  trailingActivationPct: number;
+  trailingDistancePct: number;
+
+  // Breakeven (reemplaza el SL fijo)
+  enableBreakeven: boolean;
+  breakevenActivationPct: number;
+  breakevenOffsetPct: number;
+};
 
 export function useBot() {
   const [summary, setSummary] = useState<Summary | null>(null);

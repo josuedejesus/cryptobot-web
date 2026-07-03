@@ -111,13 +111,13 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-[#0a0a0f] text-white">
       {/* Top bar */}
-      <header className="border-b border-gray-800/60 px-4 py-3 flex items-center justify-between gap-2">
+      <header className="sticky top-0 z-30 bg-[#0a0a0f]/95 backdrop-blur border-b border-gray-800/60 px-3 sm:px-6 py-3 flex items-center justify-between gap-2">
         <div className="flex items-center gap-2 min-w-0">
           <span className="text-base font-bold tracking-tight shrink-0">
             CryptoBot
           </span>
           {config && (
-            <div className="flex items-center gap-1 text-xs min-w-0">
+            <div className="flex items-center gap-1 text-xs min-w-0 overflow-x-auto no-scrollbar">
               <span className="bg-gray-800 text-gray-300 px-1.5 py-0.5 rounded font-mono shrink-0">
                 {config.symbol.replace("USDT", "")}
               </span>
@@ -136,7 +136,7 @@ export default function Home() {
           {config && (
             <button
               onClick={() => handleConfigChange("isPaused", !config.isPaused)}
-              className={`p-1.5 rounded-lg transition-colors ${
+              className={`p-2 sm:p-1.5 rounded-lg transition-colors ${
                 config.isPaused
                   ? "bg-amber-500/20 text-amber-400 hover:bg-amber-500/30"
                   : "bg-gray-800 text-gray-400 hover:text-white"
@@ -166,9 +166,10 @@ export default function Home() {
         </div>
       </header>
 
-      {/* Nav tabs */}
-      <div className="border-b border-gray-800/60 px-6">
-        <div className="flex gap-1">
+      {/* Nav tabs — scroll horizontal en mobile en vez de apretarse o
+          desbordar; en desktop se ve igual que antes. */}
+      <div className="sticky top-[49px] z-20 bg-[#0a0a0f]/95 backdrop-blur border-b border-gray-800/60 px-3 sm:px-6 overflow-x-auto no-scrollbar">
+        <div className="flex gap-1 w-max sm:w-auto">
           {[
             { id: "dashboard", icon: LayoutDashboard, label: "Dashboard" },
             { id: "config", icon: Settings, label: "Configuración" },
@@ -177,41 +178,41 @@ export default function Home() {
             <button
               key={id}
               onClick={() => setTab(id as any)}
-              className={`flex items-center gap-1.5 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+              className={`flex items-center gap-1.5 px-3 sm:px-4 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${
                 tab === id
                   ? "border-emerald-500 text-emerald-400"
                   : "border-transparent text-gray-500 hover:text-gray-300"
               }`}
             >
-              <Icon className="w-3.5 h-3.5" />
+              <Icon className="w-3.5 h-3.5 shrink-0" />
               {label}
             </button>
           ))}
         </div>
       </div>
 
-      <div className="px-6 py-6 max-w-5xl mx-auto space-y-5">
+      <div className="px-3 sm:px-6 py-5 sm:py-6 max-w-5xl mx-auto space-y-4 sm:space-y-5">
         {/* ── DASHBOARD ── */}
         {tab === "dashboard" && (
           <>
             {/* Signal card */}
             {lastSignal && (
               <div
-                className={`rounded-xl border p-5 transition-colors ${signalBg[lastSignal.signal]}`}
+                className={`rounded-xl border p-4 sm:p-5 transition-colors ${signalBg[lastSignal.signal]}`}
               >
-                <div className="flex items-start justify-between mb-4">
-                  <div>
+                <div className="flex items-start justify-between gap-3 mb-4">
+                  <div className="min-w-0">
                     <p className="text-xs text-gray-500 uppercase tracking-widest mb-1">
                       Última señal
                     </p>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center flex-wrap gap-2">
                       <span
-                        className={`text-3xl font-bold ${signalTextColor[lastSignal.signal]}`}
+                        className={`text-2xl sm:text-3xl font-bold ${signalTextColor[lastSignal.signal]}`}
                       >
                         {lastSignal.signal}
                       </span>
                       <span
-                        className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                        className={`text-xs px-2 py-0.5 rounded-full font-medium whitespace-nowrap ${
                           lastSignal.confirmed
                             ? "bg-emerald-900/50 text-emerald-400"
                             : "bg-amber-900/50 text-amber-400"
@@ -221,20 +222,20 @@ export default function Home() {
                       </span>
                     </div>
                     {lastSignal.reason && lastSignal.signal !== "HOLD" && (
-                      <p className="text-xs text-gray-400 mt-1">
+                      <p className="text-xs text-gray-400 mt-1 break-words">
                         {lastSignal.reason}
                       </p>
                     )}
                   </div>
-                  <div className="text-right">
+                  <div className="text-right shrink-0">
                     <p className="text-xs text-gray-500">Precio</p>
-                    <p className="text-xl font-mono font-semibold">
+                    <p className="text-lg sm:text-xl font-mono font-semibold">
                       ${lastSignal.price.toFixed(4)}
                     </p>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-4 md:grid-cols-7 gap-3 pt-4 border-t border-gray-700/50 text-xs">
+                <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3 pt-4 border-t border-gray-700/50 text-xs">
                   {[
                     {
                       label: `EMA ${config?.emaFast ?? 9}`,
@@ -281,9 +282,9 @@ export default function Home() {
                       color: trendColor(lastSignal.trend),
                     },
                   ].map(({ label, value, color }) => (
-                    <div key={label}>
-                      <p className="text-gray-600 mb-0.5">{label}</p>
-                      <p className={`font-medium ${color ?? "text-white"}`}>
+                    <div key={label} className="min-w-0">
+                      <p className="text-gray-600 mb-0.5 truncate">{label}</p>
+                      <p className={`font-medium truncate ${color ?? "text-white"}`}>
                         {value}
                       </p>
                     </div>
@@ -323,12 +324,14 @@ export default function Home() {
                 ].map(({ label, value, sub, color }) => (
                   <div
                     key={label}
-                    className="bg-gray-900 border border-gray-800 rounded-xl p-4"
+                    className="bg-gray-900 border border-gray-800 rounded-xl p-3 sm:p-4 min-w-0"
                   >
-                    <p className="text-xs text-gray-500 mb-1">{label}</p>
-                    <p className={`text-xl font-bold ${color}`}>{value}</p>
+                    <p className="text-xs text-gray-500 mb-1 truncate">{label}</p>
+                    <p className={`text-lg sm:text-xl font-bold truncate ${color}`}>
+                      {value}
+                    </p>
                     {sub && (
-                      <p className="text-xs text-gray-600 mt-0.5">{sub}</p>
+                      <p className="text-xs text-gray-600 mt-0.5 truncate">{sub}</p>
                     )}
                   </div>
                 ))}
@@ -337,8 +340,8 @@ export default function Home() {
 
             {/* Active trade */}
             {summary?.activeTrade && (
-              <div className="bg-gray-900 border border-amber-500/30 rounded-xl p-5">
-                <div className="flex items-center justify-between mb-4">
+              <div className="bg-gray-900 border border-amber-500/30 rounded-xl p-4 sm:p-5">
+                <div className="flex items-center justify-between gap-2 mb-4">
                   <p className="text-xs font-semibold text-amber-400 uppercase tracking-widest">
                     Trade activo
                   </p>
@@ -348,14 +351,16 @@ export default function Home() {
                       const data = await closeActiveTrade();
                       alert(`Cerrado | PnL: $${data.pnl?.toFixed(2)}`);
                     }}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs font-medium rounded-lg transition-colors"
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 active:bg-red-500/30 text-red-400 text-xs font-medium rounded-lg transition-colors shrink-0"
                   >
-                    <X className="w-3 h-3" /> Cerrar manualmente
+                    <X className="w-3 h-3" />
+                    <span className="hidden xs:inline">Cerrar manualmente</span>
+                    <span className="xs:hidden">Cerrar</span>
                   </button>
                 </div>
 
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm mb-4">
-                  <div>
+                  <div className="min-w-0">
                     <p className="text-xs text-gray-500 mb-0.5">Tipo</p>
                     <p
                       className={`font-bold text-lg ${summary.activeTrade.type === "LONG" ? "text-emerald-400" : "text-red-400"}`}
@@ -363,51 +368,51 @@ export default function Home() {
                       {summary.activeTrade.type}
                     </p>
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <p className="text-xs text-gray-500 mb-0.5">Entrada</p>
-                    <p className="font-mono font-medium">
+                    <p className="font-mono font-medium truncate">
                       ${summary.activeTrade.entryPrice.toFixed(4)}
                     </p>
                   </div>
                   {unrealizedPnl !== null && (
-                    <div>
+                    <div className="min-w-0">
                       <p className="text-xs text-gray-500 mb-0.5">PnL actual</p>
                       <p
-                        className={`font-bold text-lg ${unrealizedPnl >= 0 ? "text-emerald-400" : "text-red-400"}`}
+                        className={`font-bold text-lg truncate ${unrealizedPnl >= 0 ? "text-emerald-400" : "text-red-400"}`}
                       >
                         {unrealizedPnl >= 0 ? "+" : ""}
                         {unrealizedPnl.toFixed(2)} USDT
                       </p>
                     </div>
                   )}
-                  <div>
+                  <div className="min-w-0">
                     <p className="text-xs text-gray-500 mb-0.5">Stop Loss</p>
-                    <p className="font-mono text-red-400">
+                    <p className="font-mono text-red-400 truncate">
                       ${summary.activeTrade.stopLoss.toFixed(4)}
                     </p>
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <p className="text-xs text-gray-500 mb-0.5">Take Profit</p>
-                    <p className="font-mono text-emerald-400">
+                    <p className="font-mono text-emerald-400 truncate">
                       ${summary.activeTrade.takeProfit.toFixed(4)}
                     </p>
                   </div>
                   {summary.activeTrade.trailingStop && (
-                    <div>
+                    <div className="min-w-0">
                       <p className="text-xs text-gray-500 mb-0.5">
                         Trailing Stop
                       </p>
-                      <p className="font-mono text-amber-400">
+                      <p className="font-mono text-amber-400 truncate">
                         ${summary.activeTrade.trailingStop.toFixed(4)}
                       </p>
                     </div>
                   )}
                   {lastSignal && (
-                    <div>
+                    <div className="min-w-0">
                       <p className="text-xs text-gray-500 mb-0.5">
                         Precio actual
                       </p>
-                      <p className="font-mono font-medium">
+                      <p className="font-mono font-medium truncate">
                         ${lastSignal.price.toFixed(4)}
                       </p>
                     </div>
@@ -432,8 +437,8 @@ export default function Home() {
 
             {/* Trade history */}
             {summary && summary.trades.filter((t) => t.result).length > 0 && (
-              <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
-                <div className="flex items-center justify-between mb-4">
+              <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-5">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
                   <p className="text-xs text-gray-500 uppercase tracking-widest">
                     Historial
                   </p>
@@ -447,10 +452,10 @@ export default function Home() {
                         );
                         alert("✅ Snapshot copiado al clipboard");
                       }}
-                      className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 text-xs font-medium rounded-lg transition-colors"
+                      className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-1.5 bg-purple-500/10 hover:bg-purple-500/20 active:bg-purple-500/30 text-purple-400 text-xs font-medium rounded-lg transition-colors"
                       title="Copiar snapshot para análisis"
                     >
-                      <ClipboardCopy className="w-3 h-3" /> Snapshot
+                      <ClipboardCopy className="w-3 h-3 shrink-0" /> Snapshot
                     </button>
                     <button
                       onClick={() => {
@@ -510,9 +515,9 @@ export default function Home() {
                         );
                         alert("✅ Datos copiados al clipboard");
                       }}
-                      className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 text-xs font-medium rounded-lg transition-colors"
+                      className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-1.5 bg-blue-500/10 hover:bg-blue-500/20 active:bg-blue-500/30 text-blue-400 text-xs font-medium rounded-lg transition-colors"
                     >
-                      <BarChart2 className="w-3 h-3" /> Copiar análisis
+                      <BarChart2 className="w-3 h-3 shrink-0" /> Copiar análisis
                     </button>
                   </div>
                 </div>
@@ -525,10 +530,10 @@ export default function Home() {
                         key={trade.id}
                         className="py-2.5 border-b border-gray-800/50 last:border-0 text-sm"
                       >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-3">
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center flex-wrap gap-x-2 gap-y-1 min-w-0">
                             <span
-                              className={`text-xs font-bold px-2 py-0.5 rounded ${
+                              className={`text-xs font-bold px-2 py-0.5 rounded shrink-0 ${
                                 trade.type === "LONG"
                                   ? "bg-emerald-900/40 text-emerald-400"
                                   : "bg-red-900/40 text-red-400"
@@ -536,11 +541,9 @@ export default function Home() {
                             >
                               {trade.type}
                             </span>
-                            <span className="font-mono text-gray-400 text-xs">
+                            <span className="flex items-center gap-1 font-mono text-gray-400 text-xs shrink-0">
                               ${trade.entryPrice.toFixed(4)}
-                            </span>
-                            <ChevronRight className="w-3 h-3 text-gray-600" />
-                            <span className="font-mono text-gray-400 text-xs">
+                              <ChevronRight className="w-3 h-3 text-gray-600" />
                               ${trade.exitPrice?.toFixed(4)}
                             </span>
                             {trade.reason && (
@@ -550,14 +553,14 @@ export default function Home() {
                             )}
                           </div>
                           <span
-                            className={`font-bold ${(trade.pnl ?? 0) >= 0 ? "text-emerald-400" : "text-red-400"}`}
+                            className={`font-bold text-xs sm:text-sm shrink-0 whitespace-nowrap ${(trade.pnl ?? 0) >= 0 ? "text-emerald-400" : "text-red-400"}`}
                           >
-                            {(trade.pnl ?? 0) >= 0 ? "+" : ""}{" "}
+                            {(trade.pnl ?? 0) >= 0 ? "+" : ""}
                             {trade.pnl?.toFixed(2)} USDT
                           </span>
                         </div>
                         {(trade.peakPrice || trade.troughPrice) && (
-                          <div className="flex gap-4 mt-1 text-xs">
+                          <div className="flex flex-wrap gap-x-4 gap-y-0.5 mt-1 text-xs">
                             {trade.peakPrice && (
                               <span className="text-emerald-700">
                                 {trade.type === "LONG"
