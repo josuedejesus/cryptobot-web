@@ -89,23 +89,15 @@ export default function Home() {
 
   // Compute unrealized PnL
   let unrealizedPnl: number | null = null;
-  let progressPct = 0;
 
   if (lastSignal && summary?.activeTrade) {
     const cp = lastSignal.price;
     const ep = summary.activeTrade.entryPrice;
     const ps = config?.positionSize ?? 100;
-    const tpDistance =
-      summary.activeTrade.type === "LONG"
-        ? (summary.activeTrade.takeProfit - summary.activeTrade.entryPrice) /
-          summary.activeTrade.entryPrice
-        : (summary.activeTrade.entryPrice - summary.activeTrade.takeProfit) /
-          summary.activeTrade.entryPrice;
 
     const pc =
       summary.activeTrade.type === "LONG" ? (cp - ep) / ep : (ep - cp) / ep;
     unrealizedPnl = ps * pc;
-    progressPct = Math.min(Math.abs(pc / tpDistance) * 100, 100);
   }
 
   return (
@@ -284,7 +276,9 @@ export default function Home() {
                   ].map(({ label, value, color }) => (
                     <div key={label} className="min-w-0">
                       <p className="text-gray-600 mb-0.5 truncate">{label}</p>
-                      <p className={`font-medium truncate ${color ?? "text-white"}`}>
+                      <p
+                        className={`font-medium truncate ${color ?? "text-white"}`}
+                      >
                         {value}
                       </p>
                     </div>
@@ -326,12 +320,18 @@ export default function Home() {
                     key={label}
                     className="bg-gray-900 border border-gray-800 rounded-xl p-3 sm:p-4 min-w-0"
                   >
-                    <p className="text-xs text-gray-500 mb-1 truncate">{label}</p>
-                    <p className={`text-lg sm:text-xl font-bold truncate ${color}`}>
+                    <p className="text-xs text-gray-500 mb-1 truncate">
+                      {label}
+                    </p>
+                    <p
+                      className={`text-lg sm:text-xl font-bold truncate ${color}`}
+                    >
                       {value}
                     </p>
                     {sub && (
-                      <p className="text-xs text-gray-600 mt-0.5 truncate">{sub}</p>
+                      <p className="text-xs text-gray-600 mt-0.5 truncate">
+                        {sub}
+                      </p>
                     )}
                   </div>
                 ))}
@@ -385,28 +385,6 @@ export default function Home() {
                       </p>
                     </div>
                   )}
-                  <div className="min-w-0">
-                    <p className="text-xs text-gray-500 mb-0.5">Stop Loss</p>
-                    <p className="font-mono text-red-400 truncate">
-                      ${summary.activeTrade.stopLoss.toFixed(4)}
-                    </p>
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-xs text-gray-500 mb-0.5">Take Profit</p>
-                    <p className="font-mono text-emerald-400 truncate">
-                      ${summary.activeTrade.takeProfit.toFixed(4)}
-                    </p>
-                  </div>
-                  {summary.activeTrade.trailingStop && (
-                    <div className="min-w-0">
-                      <p className="text-xs text-gray-500 mb-0.5">
-                        Trailing Stop
-                      </p>
-                      <p className="font-mono text-amber-400 truncate">
-                        ${summary.activeTrade.trailingStop.toFixed(4)}
-                      </p>
-                    </div>
-                  )}
                   {lastSignal && (
                     <div className="min-w-0">
                       <p className="text-xs text-gray-500 mb-0.5">
@@ -417,21 +395,35 @@ export default function Home() {
                       </p>
                     </div>
                   )}
+                  <div className="min-w-0">
+                    <p className="text-xs text-gray-500 mb-0.5">
+                      {summary.activeTrade.trailingStop
+                        ? "Stop protegido"
+                        : "Stop inicial (SL)"}
+                    </p>
+                    <p
+                      className={`font-mono truncate ${summary.activeTrade.trailingStop ? "text-emerald-400" : "text-red-400"}`}
+                    >
+                      $
+                      {(
+                        summary.activeTrade.trailingStop ??
+                        summary.activeTrade.stopLoss
+                      ).toFixed(4)}
+                    </p>
+                    {summary.activeTrade.trailingStop && (
+                      <p className="text-[11px] text-gray-600 mt-0.5">
+                        SL original: ${summary.activeTrade.stopLoss.toFixed(4)}
+                      </p>
+                    )}
+                  </div>
                 </div>
 
-                {/* Progress bar */}
-                <div>
-                  <div className="flex justify-between text-xs text-gray-500 mb-1">
-                    <span>Progreso al TP</span>
-                    <span>{progressPct.toFixed(0)}%</span>
-                  </div>
-                  <div className="h-1.5 bg-gray-800 rounded-full overflow-hidden">
-                    <div
-                      className={`h-full rounded-full transition-all ${unrealizedPnl && unrealizedPnl >= 0 ? "bg-emerald-500" : "bg-red-500"}`}
-                      style={{ width: `${progressPct}%` }}
-                    />
-                  </div>
-                </div>
+                <p className="text-[11px] text-gray-600 border-t border-gray-800 pt-3">
+                  Sin take profit fijo — la salida es dinámica. El trade se
+                  cierra automáticamente si el precio toca el stop actual
+                  (breakeven o trailing, lo que esté activo), dejando correr el
+                  resto del movimiento.
+                </p>
               </div>
             )}
 

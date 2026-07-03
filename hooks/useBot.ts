@@ -18,8 +18,8 @@ export interface Trade {
   peakPrice?: number;
   troughPrice?: number;
   trailingStop?: number;
+  breakevenApplied?: boolean; // 👈 nuevo
 }
-
 export interface Summary {
   balance: number;
   totalTrades: number;
