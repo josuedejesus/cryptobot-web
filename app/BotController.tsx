@@ -46,7 +46,9 @@ function NumberField({
         // text-base (16px) evita que iOS Safari haga auto-zoom al enfocar
         className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 text-white text-base sm:text-sm focus:outline-none focus:border-emerald-600"
       />
-      {hint && <p className="text-[11px] text-gray-600 mt-1 leading-snug">{hint}</p>}
+      {hint && (
+        <p className="text-[11px] text-gray-600 mt-1 leading-snug">{hint}</p>
+      )}
     </div>
   );
 }
@@ -179,8 +181,7 @@ export default function BotController({
 
       {saving && (
         <div className="bg-amber-900/20 border border-amber-700/40 rounded-lg px-4 py-2 text-amber-400 text-xs">
-          Guardado. Reiniciá el bot para aplicar cambios de símbolo o
-          timeframe.
+          Guardado. Reiniciá el bot para aplicar cambios de símbolo o timeframe.
         </div>
       )}
 
@@ -365,10 +366,15 @@ export default function BotController({
           <p className="text-[11px] text-gray-600 mb-3">
             Evento de entrada: las bandas de Bollinger se liberan tras
             compresión y el ATR confirma que el movimiento tiene fuerza real. La
-            dirección la da la alineación de EMA9/EMA21 — no tiene parámetros
-            propios además del peso en el score (abajo) y el umbral de squeeze
-            en Riesgo/ATR.
+            dirección la da la alineación de EMA9/EMA21.
           </p>
+          <NumberField
+            label="Umbral de squeeze (Bollinger Band Width %)"
+            value={form.squeezeTreshold}
+            onChange={(v) => set("squeezeTreshold", v)}
+            step={0.25}
+            hint="Bandwidth debe estar por debajo de este valor y bajando para considerarse squeeze. Más alto = menos selectivo (en 5+ prácticamente deja de filtrar compresión real en XRPUSDT)"
+          />
         </SectionCard>
 
         {/* VWAP Reversion */}
@@ -546,11 +552,7 @@ export default function BotController({
               : "bg-emerald-600 text-white active:bg-emerald-500"
           } disabled:opacity-60`}
         >
-          {saved ? (
-            <Check className="w-4 h-4" />
-          ) : (
-            <Save className="w-4 h-4" />
-          )}
+          {saved ? <Check className="w-4 h-4" /> : <Save className="w-4 h-4" />}
           {saving ? "Guardando..." : saved ? "¡Guardado!" : "Guardar cambios"}
         </button>
       </div>

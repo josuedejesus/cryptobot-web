@@ -66,7 +66,6 @@ export type BotConfig = {
   volumeMultiplier: number;
   bbPeriod: number;
   bbStdDev: number;
-  squeezeTreshold: number;
   emaSeparation: number;
   ema21Tolerance: number;
   vwapStrict: boolean;
@@ -98,6 +97,7 @@ export type BotConfig = {
   scoreStochRsiCross: number;
 
   // Squeeze Release + ATR Expansion
+  squeezeTreshold: number;
   scoreSqueezeExpansion: number;
 
   // VWAP Reversion
