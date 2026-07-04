@@ -16,9 +16,14 @@ import {
   ChevronRight,
   ClipboardCopy,
   BarChart2,
+  Clock,
+  Flag,
 } from "lucide-react";
 import BotController from "./BotController";
 import BacktestPanel from "./BacktestPanel";
+import { formatInTimeZone } from "date-fns-tz";
+
+import { formatDuration, intervalToDuration } from "date-fns";
 
 const SYMBOLS = [
   "XRPUSDT",
@@ -100,6 +105,21 @@ export default function Home() {
     const pc =
       summary.activeTrade.type === "LONG" ? (cp - ep) / ep : (ep - cp) / ep;
     unrealizedPnl = notional * pc;
+  }
+
+  function formatElapsed(openedAt: string | Date, closedAt: string | Date) {
+    const duration = intervalToDuration({
+      start: new Date(openedAt),
+      end: new Date(closedAt),
+    });
+
+    const parts: string[] = [];
+    if (duration.hours) parts.push(`${duration.hours}h`);
+    if (duration.minutes) parts.push(`${duration.minutes}m`);
+    if (!duration.hours && !duration.minutes) {
+      parts.push(`${duration.seconds ?? 0}s`);
+    }
+    return parts.join(" ");
   }
 
   return (
@@ -541,7 +561,7 @@ export default function Home() {
                               ${trade.exitPrice?.toFixed(4)}
                             </span>
                             {trade.reason && (
-                              <span className="text-gray-600 text-xs hidden md:inline truncate max-w-32">
+                              <span className="text-gray-600 text-xs hidden md:inline truncate max-w-32 lg:max-w-48 xl:max-w-64">
                                 {trade.reason.split("|")[0].trim()}
                               </span>
                             )}
@@ -553,6 +573,49 @@ export default function Home() {
                             {trade.pnl?.toFixed(2)} USDT
                           </span>
                         </div>
+
+                        {/* fechas en horario HN */}
+                        {(trade.openedAt || trade.closedAt) && (
+                          <div className="flex flex-wrap gap-x-4 gap-y-0.5 mt-1 text-xs text-gray-600">
+                            {trade.openedAt && (
+                              <span className="flex items-center gap-1">
+                                <Clock className="w-3 h-3 text-amber-400/70" />{" "}
+                                {formatInTimeZone(
+                                  new Date(trade.openedAt),
+                                  "America/Tegucigalpa",
+                                  "dd/MM HH:mm:ss",
+                                )}
+                              </span>
+                            )}
+                            {trade.closedAt && (
+                              <span className="flex items-center gap-1">
+                                <Flag
+                                  className={`w-3 h-3 ${
+                                    trade.result === "WIN"
+                                      ? "text-emerald-500"
+                                      : "text-red-500"
+                                  }`}
+                                />
+                                {formatInTimeZone(
+                                  new Date(trade.closedAt),
+                                  "America/Tegucigalpa",
+                                  "dd/MM HH:mm:ss",
+                                )}
+                                {trade.openedAt && (
+                                  <span className="text-gray-600">
+                                    (
+                                    {formatElapsed(
+                                      trade.openedAt,
+                                      trade.closedAt,
+                                    )}
+                                    )
+                                  </span>
+                                )}
+                              </span>
+                            )}
+                          </div>
+                        )}
+
                         {(trade.peakPrice || trade.troughPrice) && (
                           <div className="flex flex-wrap gap-x-4 gap-y-0.5 mt-1 text-xs">
                             {trade.peakPrice && (
