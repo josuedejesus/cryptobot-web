@@ -1,7 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { Save, Activity, Waves, X, Compass, Target, Check } from "lucide-react";
+import {
+  Save,
+  Activity,
+  Waves,
+  X,
+  Compass,
+  Target,
+  Check,
+  ShieldAlert,
+} from "lucide-react";
 import { BotConfig } from "@/hooks/useBot";
 
 interface BotControllerProps {
@@ -533,6 +542,108 @@ export default function BotController({
               onChange={(v) => set("breakevenOffsetPct", v)}
               step={0.0001}
               hint="Margen sobre el entry para cubrir fees"
+            />
+          </div>
+        </SectionCard>
+
+        {/* Live Trading */}
+        <SectionCard
+          title="Live Trading"
+          icon={<ShieldAlert className="w-3.5 h-3.5 text-red-400" />}
+        >
+          <p className="text-[11px] text-gray-600 mb-4">
+            Estos parámetros solo aplican cuando el modo es Live — en Paper
+            Trading no tienen efecto.
+          </p>
+
+          <p className="text-[11px] text-gray-500 mb-2 font-medium">
+            Kill switch — pérdida diaria
+          </p>
+          <NumberField
+            label="Pérdida máxima diaria (USD)"
+            value={form.maxDailyLossUsd ?? NaN}
+            onChange={(v) => set("maxDailyLossUsd", Number.isNaN(v) ? null : v)}
+            step={5}
+            hint="Si la pérdida acumulada del día supera este valor, el bot deja de abrir nuevos trades hasta el día siguiente. Vacío = desactivado."
+          />
+
+          <div className="mt-4 pt-4 border-t border-gray-800">
+            <p className="text-[11px] text-gray-500 mb-2 font-medium">
+              Entrada por limit order
+            </p>
+            <p className="text-[11px] text-gray-600 mb-3">
+              La entrada intenta ejecutarse como limit order (fee de maker, más
+              barato) antes de caer a market. Si no se llena a tiempo y el
+              precio no se alejó demasiado, entra a market como respaldo.
+            </p>
+            <div className="grid grid-cols-2 gap-4">
+              <NumberField
+                label="Offset del limit (%)"
+                value={form.entryLimitOffsetPct}
+                onChange={(v) => set("entryLimitOffsetPct", v)}
+                step={0.0001}
+                hint="Qué tan favorable respecto al precio actual"
+              />
+              <NumberField
+                label="Timeout (ms)"
+                value={form.entryLimitTimeoutMs}
+                onChange={(v) => set("entryLimitTimeoutMs", v)}
+                step={500}
+                hint="Antes de cancelar y decidir qué hacer"
+              />
+            </div>
+            <div className="mt-4">
+              <NumberField
+                label="Drift máximo tolerado (%)"
+                value={form.entryMaxDriftPct}
+                onChange={(v) => set("entryMaxDriftPct", v)}
+                step={0.0001}
+                hint="Si el precio se alejó más que esto sin llenar el limit, se descarta la señal en vez de entrar a market"
+              />
+            </div>
+          </div>
+        </SectionCard>
+
+        {/* Confirmación de Entrada */}
+        <SectionCard
+          title="Confirmación de Entrada"
+          icon={<Target className="w-3.5 h-3.5 text-cyan-400" />}
+        >
+          <p className="text-[11px] text-gray-600 mb-3">
+            En vez de entrar directo al precio de la señal, espera a que el
+            precio confirme un rebote rápido (mejor precio de entrada) antes de
+            comprometerse. Si el pullback se profundiza demasiado, descarta la
+            señal — el patrón histórico muestra que esos casos suelen terminar
+            en pérdida.
+          </p>
+          <ToggleField
+            label="Activar confirmación de entrada"
+            value={form.enableEntryConfirmation}
+            onChange={(v) => set("enableEntryConfirmation", v)}
+          />
+          <div className="grid grid-cols-2 gap-4 mt-4">
+            <NumberField
+              label="Rebote requerido (%)"
+              value={form.entryReboundPct}
+              onChange={(v) => set("entryReboundPct", v)}
+              step={0.0005}
+              hint="Cuánto debe rebotar desde el peor punto para confirmar"
+            />
+            <NumberField
+              label="Pullback máximo (%)"
+              value={form.entryMaxPullbackPct}
+              onChange={(v) => set("entryMaxPullbackPct", v)}
+              step={0.001}
+              hint="Si se profundiza más que esto, descarta la señal"
+            />
+          </div>
+          <div className="mt-4">
+            <NumberField
+              label="Velas máximas de espera"
+              value={form.entryConfirmMaxCandles}
+              onChange={(v) => set("entryConfirmMaxCandles", v)}
+              step={1}
+              hint="Ventana máxima esperando confirmación antes de descartar"
             />
           </div>
         </SectionCard>

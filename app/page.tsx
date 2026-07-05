@@ -18,6 +18,7 @@ import {
   BarChart2,
   Clock,
   Flag,
+  ShieldAlert,
 } from "lucide-react";
 import BotController from "./BotController";
 import BacktestPanel from "./BacktestPanel";
@@ -130,21 +131,31 @@ export default function Home() {
           <span className="text-base font-bold tracking-tight shrink-0">
             CryptoBot
           </span>
-          {config && (
-            <div className="flex items-center gap-1 text-xs min-w-0 overflow-x-auto no-scrollbar">
-              <span className="bg-gray-800 text-gray-300 px-1.5 py-0.5 rounded font-mono shrink-0">
-                {config.symbol.replace("USDT", "")}
-              </span>
-              <span className="bg-gray-800 text-gray-300 px-1.5 py-0.5 rounded font-mono shrink-0">
-                {config.timeframe}
-              </span>
-              <span
-                className={`px-1.5 py-0.5 rounded font-medium shrink-0 ${config.mode === "paper" ? "bg-blue-900/40 text-blue-400" : "bg-emerald-900/40 text-emerald-400"}`}
-              >
-                {config.mode === "paper" ? "Paper" : "Real"}
-              </span>
-            </div>
-          )}
+          {config && summary?.isTestnet !== undefined && (
+  <div className="flex items-center gap-1 text-xs min-w-0 overflow-x-auto no-scrollbar">
+    <span className="bg-gray-800 text-gray-300 px-1.5 py-0.5 rounded font-mono shrink-0">
+      {config.symbol.replace("USDT", "")}
+    </span>
+    <span className="bg-gray-800 text-gray-300 px-1.5 py-0.5 rounded font-mono shrink-0">
+      {config.timeframe}
+    </span>
+    <span
+      className={`px-1.5 py-0.5 rounded font-medium shrink-0 ${config.mode === "paper" ? "bg-blue-900/40 text-blue-400" : "bg-emerald-900/40 text-emerald-400"}`}
+    >
+      {config.mode === "paper" ? "Paper" : "Real"}
+    </span>
+    <span
+      className={`px-1.5 py-0.5 rounded font-medium shrink-0 ${
+        summary.isTestnet
+          ? "bg-amber-900/40 text-amber-400"
+          : "bg-red-900/40 text-red-400"
+      }`}
+      title="Fuente de datos de mercado"
+    >
+      {summary.isTestnet ? "Datos: Testnet" : "Datos: Mainnet"}
+    </span>
+  </div>
+)}
         </div>
         <div className="flex items-center gap-2 shrink-0">
           {config && (
@@ -209,6 +220,20 @@ export default function Home() {
         {/* ── DASHBOARD ── */}
         {tab === "dashboard" && (
           <>
+            {config?.mode === "live" && summary?.killSwitchActive && (
+              <div className="bg-red-900/20 border border-red-700/40 rounded-xl px-4 py-3 flex items-start gap-3">
+                <ShieldAlert className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
+                <div className="min-w-0">
+                  <p className="text-red-400 text-sm font-medium">
+                    Kill switch activado
+                  </p>
+                  <p className="text-gray-500 text-xs">
+                    Pérdida diaria alcanzó el límite configurado. El bot no
+                    abrirá nuevos trades hasta mañana.
+                  </p>
+                </div>
+              </div>
+            )}
             {/* Signal card */}
             {lastSignal && (
               <div
@@ -326,6 +351,18 @@ export default function Home() {
                         ? "text-emerald-400"
                         : "text-red-400",
                   },
+                  ...(config?.mode === "live" && summary.todayPnl !== undefined
+                    ? [
+                        {
+                          label: "PnL Hoy",
+                          value: `${parseFloat(summary.todayPnl) >= 0 ? "+" : ""}$${summary.todayPnl}`,
+                          color:
+                            parseFloat(summary.todayPnl) >= 0
+                              ? "text-emerald-400"
+                              : "text-red-400",
+                        },
+                      ]
+                    : []),
                   {
                     label: "Win Rate",
                     value: summary.winRate,
@@ -362,11 +399,30 @@ export default function Home() {
 
             {/* Active trade */}
             {summary?.activeTrade && (
-              <div className="bg-gray-900 border border-amber-500/30 rounded-xl p-4 sm:p-5">
+              <div
+                className={`bg-gray-900 border rounded-xl p-4 sm:p-5 ${
+                  config?.mode === "live"
+                    ? "border-red-500/40"
+                    : "border-amber-500/30"
+                }`}
+              >
                 <div className="flex items-center justify-between gap-2 mb-4">
-                  <p className="text-xs font-semibold text-amber-400 uppercase tracking-widest">
-                    Trade activo
-                  </p>
+                  <div className="flex items-center gap-2">
+                    <p
+                      className={`text-xs font-semibold uppercase tracking-widest ${
+                        config?.mode === "live"
+                          ? "text-red-400"
+                          : "text-amber-400"
+                      }`}
+                    >
+                      Trade activo
+                    </p>
+                    {config?.mode === "live" && (
+                      <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-red-900/50 text-red-400 font-bold">
+                        REAL
+                      </span>
+                    )}
+                  </div>
                   <button
                     onClick={async () => {
                       if (!closeActiveTrade) return;

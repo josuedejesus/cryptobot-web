@@ -29,6 +29,9 @@ export interface Summary {
   totalPnl: string;
   activeTrade: Trade | null;
   trades: Trade[];
+  todayPnl?: string;
+  killSwitchActive?: boolean;
+  isTestnet?: boolean;
 }
 
 export interface Signal {
@@ -112,6 +115,19 @@ export type BotConfig = {
   enableBreakeven: boolean;
   breakevenActivationPct: number;
   breakevenOffsetPct: number;
+
+  // Live Trading — Kill Switch
+  maxDailyLossUsd: number | null;
+
+  // Live Trading — Entrada por limit order
+  entryLimitOffsetPct: number;
+  entryLimitTimeoutMs: number;
+  entryMaxDriftPct: number;
+
+  enableEntryConfirmation: boolean;
+  entryReboundPct: number;
+  entryMaxPullbackPct: number;
+  entryConfirmMaxCandles: number;
 };
 
 export function useBot() {
@@ -125,11 +141,20 @@ export function useBot() {
       .then((r) => r.json())
       .then((cfg: BotConfig) => {
         setConfig(cfg);
-        // Cargar summary con el endpoint correcto según mode
         fetch(`${API}/${getEndpoint(cfg.mode)}/summary`)
           .then((r) => r.json())
           .then(setSummary);
       });
+
+    // 👈 nuevo: traer el último signal conocido, para no quedar en
+    // blanco esperando el próximo tick del websocket tras un refresh
+    // o un reinicio reciente del backend.
+    fetch(`${API}/bot/last-signal`)
+      .then((r) => r.json())
+      .then((s) => {
+        if (s && s.signal) setLastSignal(s);
+      })
+      .catch(() => {}); // si falla, simplemente esperamos el próximo evento del socket
 
     const socket: Socket = io(API);
     socket.on("connect", () => setConnected(true));
@@ -190,7 +215,6 @@ export function useBot() {
     return data;
   };
 
-  // Helper dinámico
   const getEndpoint = (mode: string) =>
     mode === "live" ? "live-trade" : "paper-trade";
 
@@ -202,6 +226,6 @@ export function useBot() {
     updateConfig,
     applyPreset,
     closeActiveTrade,
-    getSnapshot, // 👈
+    getSnapshot,
   };
 }

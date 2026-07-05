@@ -26,6 +26,8 @@ import {
   Check,
   Trash2,
   Pencil,
+  Code,
+  ClipboardCopy,
 } from "lucide-react";
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
@@ -102,6 +104,7 @@ export default function BacktestPanel() {
   const [result, setResult] = useState<BacktestResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showAllTrades, setShowAllTrades] = useState(false);
+  const [showRawJson, setShowRawJson] = useState(false);
 
   // Presets guardados
   const [configs, setConfigs] = useState<SavedConfig[]>([]);
@@ -442,6 +445,39 @@ export default function BacktestPanel() {
               {optimizing ? "Optimizando..." : "Optimizar TP/SL"}
             </button>
           </div>
+          {result && (
+            <button
+              onClick={() => setShowRawJson((v) => !v)}
+              className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-white transition-colors"
+            >
+              <Code className="w-3 h-3" />
+              {showRawJson ? "Ocultar JSON" : "Ver JSON crudo"}
+            </button>
+          )}
+
+          {showRawJson && result && (
+            <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-5">
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-xs text-gray-500 uppercase tracking-widest">
+                  JSON crudo (incluye configSnapshot)
+                </p>
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(
+                      JSON.stringify(result, null, 2),
+                    );
+                    alert("✅ Copiado al clipboard");
+                  }}
+                  className="flex items-center gap-1.5 px-2 py-1 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 text-xs rounded-lg transition-colors"
+                >
+                  <ClipboardCopy className="w-3 h-3" /> Copiar
+                </button>
+              </div>
+              <pre className="text-[11px] text-gray-400 overflow-x-auto max-h-96 overflow-y-auto bg-gray-950 rounded-lg p-3">
+                {JSON.stringify(result, null, 2)}
+              </pre>
+            </div>
+          )}
         </div>
       </div>
 
@@ -824,7 +860,9 @@ function StatCard({
         <Icon className={`w-3.5 h-3.5 shrink-0 ${iconColor}`} />
         <p className="text-xs text-gray-500 truncate">{label}</p>
       </div>
-      <p className={`text-lg sm:text-xl font-bold truncate ${valueColor ?? "text-white"}`}>
+      <p
+        className={`text-lg sm:text-xl font-bold truncate ${valueColor ?? "text-white"}`}
+      >
         {value}
       </p>
       {sub && <p className="text-xs text-gray-600 mt-0.5 truncate">{sub}</p>}
