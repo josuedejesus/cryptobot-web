@@ -398,56 +398,6 @@ export default function BotController({
           </p>
         </SectionCard>
 
-        {/* Riesgo */}
-        <SectionCard
-          title="Riesgo — SL inicial + Trailing Stop"
-          icon={<Target className="w-3.5 h-3.5 text-amber-400" />}
-        >
-          <p className="text-[11px] text-gray-600 mb-3">
-            El SL inicial protege apenas abre el trade. Una vez que el precio se
-            mueve a favor lo suficiente, el trailing stop lo sigue de cerca —
-            sin techo de TP fijo, deja correr los movimientos grandes.
-          </p>
-          <div className="grid grid-cols-2 gap-4 mb-4">
-            <NumberField
-              label="ATR período"
-              value={form.atrPeriod}
-              onChange={(v) => set("atrPeriod", v)}
-            />
-            <NumberField
-              label="SL inicial × ATR"
-              value={form.slAtrMultiplier}
-              onChange={(v) => set("slAtrMultiplier", v)}
-              step={0.25}
-              hint="Distancia del stop loss antes de activar trailing"
-            />
-          </div>
-          <div className="pt-4 border-t border-gray-800">
-            <ToggleField
-              label="Activar Trailing Stop"
-              value={form.enableTrailingStop}
-              onChange={(v) => set("enableTrailingStop", v)}
-              hint="Off = solo SL fijo, sin TP (no recomendado)"
-            />
-            <div className="grid grid-cols-2 gap-4 mt-4">
-              <NumberField
-                label="Activación (%)"
-                value={form.trailingActivationPct}
-                onChange={(v) => set("trailingActivationPct", v)}
-                step={0.001}
-                hint="Ganancia mínima para empezar a trailear"
-              />
-              <NumberField
-                label="Distancia (%)"
-                value={form.trailingDistancePct}
-                onChange={(v) => set("trailingDistancePct", v)}
-                step={0.001}
-                hint="Qué tan cerca sigue el trailing al precio"
-              />
-            </div>
-          </div>
-        </SectionCard>
-
         {/* Score compuesto */}
         <SectionCard
           title="Score compuesto"
@@ -511,6 +461,100 @@ export default function BotController({
           </div>
         </SectionCard>
 
+        {/* Confirmación de Entrada */}
+        <SectionCard
+          title="Confirmación de Entrada"
+          icon={<Target className="w-3.5 h-3.5 text-cyan-400" />}
+        >
+          <p className="text-[11px] text-gray-600 mb-3">
+            En vez de entrar directo al precio de la señal, espera a que el
+            precio confirme un rebote rápido (mejor precio de entrada) antes de
+            comprometerse. Si el pullback se profundiza demasiado, descarta la
+            señal — el patrón histórico muestra que esos casos suelen terminar
+            en pérdida.
+          </p>
+          <ToggleField
+            label="Activar confirmación de entrada"
+            value={form.enableEntryConfirmation}
+            onChange={(v) => set("enableEntryConfirmation", v)}
+          />
+          <div className="grid grid-cols-2 gap-4 mt-4">
+            <NumberField
+              label="Rebote requerido (%)"
+              value={form.entryReboundPct}
+              onChange={(v) => set("entryReboundPct", v)}
+              step={0.0005}
+              hint="Cuánto debe rebotar desde el peor punto para confirmar"
+            />
+            <NumberField
+              label="Pullback máximo (%)"
+              value={form.entryMaxPullbackPct}
+              onChange={(v) => set("entryMaxPullbackPct", v)}
+              step={0.001}
+              hint="Si se profundiza más que esto, descarta la señal"
+            />
+          </div>
+          <div className="mt-4">
+            <NumberField
+              label="Velas máximas de espera"
+              value={form.entryConfirmMaxCandles}
+              onChange={(v) => set("entryConfirmMaxCandles", v)}
+              step={1}
+              hint="Ventana máxima esperando confirmación antes de descartar"
+            />
+          </div>
+        </SectionCard>
+
+        {/* Riesgo */}
+        <SectionCard
+          title="Riesgo — SL inicial + Trailing Stop"
+          icon={<Target className="w-3.5 h-3.5 text-amber-400" />}
+        >
+          <p className="text-[11px] text-gray-600 mb-3">
+            El SL inicial protege apenas abre el trade. Una vez que el precio se
+            mueve a favor lo suficiente, el trailing stop lo sigue de cerca —
+            sin techo de TP fijo, deja correr los movimientos grandes.
+          </p>
+          <div className="grid grid-cols-2 gap-4 mb-4">
+            <NumberField
+              label="ATR período"
+              value={form.atrPeriod}
+              onChange={(v) => set("atrPeriod", v)}
+            />
+            <NumberField
+              label="SL inicial × ATR"
+              value={form.slAtrMultiplier}
+              onChange={(v) => set("slAtrMultiplier", v)}
+              step={0.25}
+              hint="Distancia del stop loss antes de activar trailing"
+            />
+          </div>
+          <div className="pt-4 border-t border-gray-800">
+            <ToggleField
+              label="Activar Trailing Stop"
+              value={form.enableTrailingStop}
+              onChange={(v) => set("enableTrailingStop", v)}
+              hint="Off = solo SL fijo, sin TP (no recomendado)"
+            />
+            <div className="grid grid-cols-2 gap-4 mt-4">
+              <NumberField
+                label="Activación (%)"
+                value={form.trailingActivationPct}
+                onChange={(v) => set("trailingActivationPct", v)}
+                step={0.001}
+                hint="Ganancia mínima para empezar a trailear"
+              />
+              <NumberField
+                label="Distancia (%)"
+                value={form.trailingDistancePct}
+                onChange={(v) => set("trailingDistancePct", v)}
+                step={0.001}
+                hint="Qué tan cerca sigue el trailing al precio"
+              />
+            </div>
+          </div>
+        </SectionCard>
+
         {/* Breakeven Stop */}
         <SectionCard
           title="Breakeven Stop"
@@ -542,6 +586,32 @@ export default function BotController({
               onChange={(v) => set("breakevenOffsetPct", v)}
               step={0.0001}
               hint="Margen sobre el entry para cubrir fees"
+            />
+          </div>
+        </SectionCard>
+
+        {/* Take Profit Fijo (alternativa al Trailing Stop) */}
+        <SectionCard
+          title="Take Profit Fijo"
+          icon={<Target className="w-3.5 h-3.5 text-cyan-400" />}
+        >
+          <p className="text-[11px] text-gray-600 mb-3">
+            Alternativa al trailing stop — cierra el trade apenas toca un nivel
+            de ganancia calculado como múltiplo del ATR. Mutuamente excluyente
+            con breakeven/trailing: si esto está activo, esos 2 se ignoran.
+          </p>
+          <ToggleField
+            label="Activar TP fijo"
+            value={form.enableFixedTP}
+            onChange={(v) => set("enableFixedTP", v)}
+          />
+          <div className="mt-4">
+            <NumberField
+              label="TP × ATR"
+              value={form.tpAtrMultiplier}
+              onChange={(v) => set("tpAtrMultiplier", v)}
+              step={0.25}
+              hint="Distancia del take profit (múltiplo del ATR, igual criterio que el SL)"
             />
           </div>
         </SectionCard>
@@ -603,56 +673,8 @@ export default function BotController({
             </div>
           </div>
         </SectionCard>
-
-        {/* Confirmación de Entrada */}
-        <SectionCard
-          title="Confirmación de Entrada"
-          icon={<Target className="w-3.5 h-3.5 text-cyan-400" />}
-        >
-          <p className="text-[11px] text-gray-600 mb-3">
-            En vez de entrar directo al precio de la señal, espera a que el
-            precio confirme un rebote rápido (mejor precio de entrada) antes de
-            comprometerse. Si el pullback se profundiza demasiado, descarta la
-            señal — el patrón histórico muestra que esos casos suelen terminar
-            en pérdida.
-          </p>
-          <ToggleField
-            label="Activar confirmación de entrada"
-            value={form.enableEntryConfirmation}
-            onChange={(v) => set("enableEntryConfirmation", v)}
-          />
-          <div className="grid grid-cols-2 gap-4 mt-4">
-            <NumberField
-              label="Rebote requerido (%)"
-              value={form.entryReboundPct}
-              onChange={(v) => set("entryReboundPct", v)}
-              step={0.0005}
-              hint="Cuánto debe rebotar desde el peor punto para confirmar"
-            />
-            <NumberField
-              label="Pullback máximo (%)"
-              value={form.entryMaxPullbackPct}
-              onChange={(v) => set("entryMaxPullbackPct", v)}
-              step={0.001}
-              hint="Si se profundiza más que esto, descarta la señal"
-            />
-          </div>
-          <div className="mt-4">
-            <NumberField
-              label="Velas máximas de espera"
-              value={form.entryConfirmMaxCandles}
-              onChange={(v) => set("entryConfirmMaxCandles", v)}
-              step={1}
-              hint="Ventana máxima esperando confirmación antes de descartar"
-            />
-          </div>
-        </SectionCard>
       </div>
 
-      {/* Barra de guardar fija — solo mobile. En desktop el botón vive en
-          el header, así que esta barra queda oculta (sm:hidden). El
-          padding-bottom usa env(safe-area-inset-bottom) para no quedar
-          tapada por la barra de gestos en iPhones con notch. */}
       <div className="sm:hidden fixed bottom-0 left-0 right-0 z-20 bg-gray-950/95 backdrop-blur border-t border-gray-800 px-4 pt-3 [padding-bottom:max(0.75rem,env(safe-area-inset-bottom))]">
         <button
           onClick={handleSave}

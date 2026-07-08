@@ -128,6 +128,10 @@ export type BotConfig = {
   entryReboundPct: number;
   entryMaxPullbackPct: number;
   entryConfirmMaxCandles: number;
+
+  // Take profit fijo
+  enableFixedTP: boolean;
+  tpAtrMultiplier: number;
 };
 
 export function useBot() {
