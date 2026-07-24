@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Save,
   Activity,
@@ -132,16 +132,44 @@ export default function BotController({
   const [form, setForm] = useState<BotConfig>({ ...config });
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  // Solo los campos que el usuario realmente tocó — evitamos mandar el
+  // form completo al guardar. Si `config` cambió por fuera de este
+  // componente (un UPDATE directo, otra pestaña) mientras esta pantalla
+  // seguía montada, `form` puede tener valores viejos para los campos NO
+  // tocados; mandar el objeto entero pisaría esos cambios externos con
+  // datos stale. Mandando solo el diff, lo que no editaste no se toca.
+  const [dirtyKeys, setDirtyKeys] = useState<Set<keyof BotConfig>>(new Set());
+
+  // Si `config` cambia por fuera (UPDATE directo, otra pestaña) mientras
+  // esta pantalla sigue montada, reflejamos esos valores nuevos en `form`
+  // — pero solo para los campos que el usuario no está editando ahora
+  // mismo, para no perder ediciones en progreso.
+  useEffect(() => {
+    setForm((prev) => {
+      const next = { ...prev };
+      for (const key of Object.keys(config) as (keyof BotConfig)[]) {
+        if (!dirtyKeys.has(key)) (next as any)[key] = config[key];
+      }
+      return next;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [config]);
 
   const set = (key: keyof BotConfig, value: any) => {
     setForm((prev) => ({ ...prev, [key]: value }));
+    setDirtyKeys((prev) => new Set(prev).add(key));
     setSaved(false);
   };
 
   const handleSave = async () => {
     setSaving(true);
     try {
-      await onSave(form);
+      const data: Partial<BotConfig> = {};
+      for (const key of dirtyKeys) {
+        (data as any)[key] = form[key];
+      }
+      await onSave(data);
+      setDirtyKeys(new Set());
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
     } finally {
@@ -226,6 +254,23 @@ export default function BotController({
                 ))}
               </select>
             </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4 mt-4">
+            <NumberField
+              label="Escala fuerza tendencia"
+              value={form.trendStrengthScale}
+              onChange={(v) => set("trendStrengthScale", v)}
+              step={0.1}
+              hint="Cuánto pesa la fuerza de la tendencia HTF en el score"
+            />
+            <NumberField
+              label="Fee (%)"
+              value={form.feePct}
+              onChange={(v) => set("feePct", v)}
+              step={0.0001}
+              hint="Comisión por lado, usada para SCRATCH y breakeven"
+            />
           </div>
 
           <div className="mt-4">
@@ -494,13 +539,29 @@ export default function BotController({
               hint="Si se profundiza más que esto, descarta la señal"
             />
           </div>
-          <div className="mt-4">
+          <div className="grid grid-cols-2 gap-4 mt-4">
             <NumberField
               label="Velas máximas de espera"
               value={form.entryConfirmMaxCandles}
               onChange={(v) => set("entryConfirmMaxCandles", v)}
               step={1}
               hint="Ventana máxima esperando confirmación antes de descartar"
+            />
+            <NumberField
+              label="Timeout (ms)"
+              value={form.entryConfirmTimeoutMs}
+              onChange={(v) => set("entryConfirmTimeoutMs", v)}
+              step={1000}
+              hint="Tope de tiempo real esperando confirmación en vivo"
+            />
+          </div>
+          <div className="mt-4 pt-4 border-t border-gray-800">
+            <ToggleField
+              label="Permitir entrada intravela"
+              value={form.enableUnconfirmedEntry}
+              onChange={(v) => set("enableUnconfirmedEntry", v)}
+              hint="⚠️ Riesgoso: abre trades con la vela sin cerrar, sin la validación que tiene el backtest. Default off."
+              danger
             />
           </div>
         </SectionCard>
@@ -529,6 +590,13 @@ export default function BotController({
               hint="Distancia del stop loss antes de activar trailing"
             />
           </div>
+          <NumberField
+            label="Distancia máxima del SL (%)"
+            value={form.maxSlDistancePct}
+            onChange={(v) => set("maxSlDistancePct", v)}
+            step={0.005}
+            hint="Techo del SL en % de precio, aunque el ATR calcule más lejos"
+          />
           <div className="pt-4 border-t border-gray-800">
             <ToggleField
               label="Activar Trailing Stop"
@@ -549,7 +617,18 @@ export default function BotController({
                 value={form.trailingDistancePct}
                 onChange={(v) => set("trailingDistancePct", v)}
                 step={0.001}
-                hint="Qué tan cerca sigue el trailing al precio"
+                hint="Usado solo si Distancia × ATR está vacío"
+              />
+            </div>
+            <div className="mt-4">
+              <NumberField
+                label="Distancia × ATR"
+                value={form.trailAtrMultiplier ?? NaN}
+                onChange={(v) =>
+                  set("trailAtrMultiplier", Number.isNaN(v) ? null : v)
+                }
+                step={0.01}
+                hint="Si tiene valor, reemplaza a 'Distancia (%)' — se adapta a la volatilidad del momento. Vacío = usa el % fijo."
               />
             </div>
           </div>
@@ -596,9 +675,10 @@ export default function BotController({
           icon={<Target className="w-3.5 h-3.5 text-cyan-400" />}
         >
           <p className="text-[11px] text-gray-600 mb-3">
-            Alternativa al trailing stop — cierra el trade apenas toca un nivel
-            de ganancia calculado como múltiplo del ATR. Mutuamente excluyente
-            con breakeven/trailing: si esto está activo, esos 2 se ignoran.
+            Techo adicional — cierra el trade apenas toca un nivel de ganancia
+            calculado como múltiplo del ATR. Funciona en paralelo con
+            breakeven/trailing (no los reemplaza): si el precio revierte antes
+            de llegar acá, breakeven/trailing protegen igual que siempre.
           </p>
           <ToggleField
             label="Activar TP fijo"
@@ -608,8 +688,10 @@ export default function BotController({
           <div className="mt-4">
             <NumberField
               label="TP × ATR"
-              value={form.tpAtrMultiplier}
-              onChange={(v) => set("tpAtrMultiplier", v)}
+              value={form.tpAtrMultiplier ?? NaN}
+              onChange={(v) =>
+                set("tpAtrMultiplier", Number.isNaN(v) ? null : v)
+              }
               step={0.25}
               hint="Distancia del take profit (múltiplo del ATR, igual criterio que el SL)"
             />

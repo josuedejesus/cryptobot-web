@@ -83,6 +83,10 @@ export type BotConfig = {
   leverage: number;
   atrPeriod: number;
   slAtrMultiplier: number;
+  maxSlDistancePct: number;
+  feePct: number;
+  trailAtrMultiplier: number | null;
+  trendStrengthScale: number;
 
   // Score compuesto
   scoreMinToEnter: number;
@@ -128,10 +132,14 @@ export type BotConfig = {
   entryReboundPct: number;
   entryMaxPullbackPct: number;
   entryConfirmMaxCandles: number;
+  entryConfirmTimeoutMs: number;
 
   // Take profit fijo
   enableFixedTP: boolean;
-  tpAtrMultiplier: number;
+  tpAtrMultiplier: number | null;
+
+  // Entrada intravela (riesgoso — sin validar contra backtest)
+  enableUnconfirmedEntry: boolean;
 };
 
 export function useBot() {
