@@ -19,8 +19,8 @@ interface BotControllerProps {
   activeTrade?: boolean;
 }
 
-const TIMEFRAMES = ["3m", "5m", "15m", "30m", "1h"];
-const TREND_TIMEFRAMES = ["15m", "30m", "1h", "4h"];
+const TIMEFRAMES = ["3m", "5m", "15m", "30m", "1h", "4h"];
+const TREND_TIMEFRAMES = ["15m", "30m", "1h", "4h", "1d"];
 
 // ── Componentes fuera del render principal ──
 // Viven afuera de BotController para no perder identidad (y por lo tanto

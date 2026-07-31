@@ -264,6 +264,37 @@ export default function BacktestPanel() {
     }
   };
 
+  // Robustez multi-ventana (corre 13 ventanas mensuales, como el test manual)
+  const [windowsLoading, setWindowsLoading] = useState(false);
+  const [windowsResult, setWindowsResult] = useState<{
+    windows: {
+      start: string;
+      end: string;
+      totalTrades: number;
+      winRate: string;
+      totalPnl: number;
+    }[];
+    positive: number;
+    total: number;
+  } | null>(null);
+  const [windowsError, setWindowsError] = useState<string | null>(null);
+
+  const runWindows = async () => {
+    setWindowsLoading(true);
+    setWindowsError(null);
+    try {
+      const qs = new URLSearchParams({ months: "13" });
+      if (selectedConfigId) qs.set("configId", String(selectedConfigId));
+      const res = await fetch(`${API}/backtest/windows?${qs.toString()}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      setWindowsResult(await res.json());
+    } catch {
+      setWindowsError("No se pudo correr el test multi-ventana.");
+    } finally {
+      setWindowsLoading(false);
+    }
+  };
+
   // Equity curve: PnL acumulado trade a trade
   const equityCurve = result
     ? result.trades.reduce<{ i: number; equity: number }[]>((acc, t, idx) => {
@@ -522,6 +553,16 @@ export default function BacktestPanel() {
         <Target className="w-3.5 h-3.5 shrink-0" />
         {optimizing ? "Optimizando..." : "Optimizar TP/SL"}
       </button>
+
+      <button
+        onClick={runWindows}
+        disabled={windowsLoading}
+        className="flex items-center justify-center gap-1.5 px-4 py-2.5 sm:py-2 bg-amber-600 hover:bg-amber-500 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-60"
+        title="Corre 13 ventanas mensuales — un edge real aparece positivo en la mayoría, no en una con suerte"
+      >
+        <TrendingUp className="w-3.5 h-3.5 shrink-0" />
+        {windowsLoading ? "Corriendo 13..." : "Robustez (13 meses)"}
+      </button>
     </div>
 
     {result && (
@@ -656,6 +697,71 @@ export default function BacktestPanel() {
                           mejor
                         </span>
                       )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {windowsError && (
+        <div className="bg-red-900/20 border border-red-700/40 rounded-xl px-4 py-3 text-red-400 text-sm">
+          {windowsError}
+        </div>
+      )}
+      {windowsResult && (
+        <div className="bg-gray-900 border border-amber-800/40 rounded-xl p-4 sm:p-5">
+          <div className="flex items-center justify-between gap-2 mb-1">
+            <p className="text-xs text-amber-400 uppercase tracking-widest">
+              Robustez multi-ventana
+            </p>
+            <span
+              className={`text-sm font-bold ${
+                windowsResult.positive === windowsResult.total
+                  ? "text-emerald-400"
+                  : windowsResult.positive >= windowsResult.total * 0.6
+                    ? "text-amber-400"
+                    : "text-red-400"
+              }`}
+            >
+              {windowsResult.positive}/{windowsResult.total} positivas
+            </span>
+          </div>
+          <p className="text-[11px] text-gray-600 mb-4">
+            Cada fila es un backtest independiente de 30 días. Un edge real
+            aparece positivo en la mayoría de las ventanas — no en una sola con
+            suerte. (El PnL escala con el leverage; mirá el signo y el win rate.)
+          </p>
+          <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+            <table className="w-full text-sm min-w-[440px]">
+              <thead>
+                <tr className="text-left text-[11px] text-gray-500 uppercase tracking-wider border-b border-gray-800">
+                  <th className="pb-2 pr-3">Ventana</th>
+                  <th className="pb-2 pr-3">Trades</th>
+                  <th className="pb-2 pr-3">Win rate</th>
+                  <th className="pb-2">PnL</th>
+                </tr>
+              </thead>
+              <tbody>
+                {windowsResult.windows.map((w, i) => (
+                  <tr
+                    key={i}
+                    className="border-b border-gray-800/50 last:border-0"
+                  >
+                    <td className="py-2 pr-3 text-gray-400 whitespace-nowrap">
+                      {w.start} → {w.end}
+                    </td>
+                    <td className="py-2 pr-3 text-gray-300">{w.totalTrades}</td>
+                    <td className="py-2 pr-3 text-gray-300">{w.winRate}</td>
+                    <td
+                      className={`py-2 font-medium whitespace-nowrap ${
+                        w.totalPnl >= 0 ? "text-emerald-400" : "text-red-400"
+                      }`}
+                    >
+                      {w.totalPnl >= 0 ? "+" : ""}${w.totalPnl}{" "}
+                      {w.totalPnl >= 0 ? "✅" : "❌"}
                     </td>
                   </tr>
                 ))}
