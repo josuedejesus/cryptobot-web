@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import BotController from "./BotController";
 import BacktestPanel from "./BacktestPanel";
+import CandleChart from "@/components/CandleChart";
 import { formatInTimeZone } from "date-fns-tz";
 
 import { formatDuration, intervalToDuration } from "date-fns";
@@ -220,6 +221,23 @@ export default function Home() {
         {/* ── DASHBOARD ── */}
         {tab === "dashboard" && (
           <>
+            {config && (
+              <div className="bg-gray-900 border border-gray-800 rounded-xl p-3 sm:p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-xs text-gray-500 uppercase tracking-widest">
+                    {config.symbol.replace("USDT", "")} · {config.timeframe}
+                  </p>
+                  <span className="text-[10px] text-gray-600">
+                    ▲/▼ entrada · ● salida (PnL)
+                  </span>
+                </div>
+                <CandleChart
+                  symbol={config.symbol}
+                  timeframe={config.timeframe}
+                  trades={summary?.trades ?? []}
+                />
+              </div>
+            )}
             {config?.mode === "live" && summary?.killSwitchActive && (
               <div className="bg-red-900/20 border border-red-700/40 rounded-xl px-4 py-3 flex items-start gap-3">
                 <ShieldAlert className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
