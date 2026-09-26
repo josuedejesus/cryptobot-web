@@ -100,8 +100,6 @@ export default function Home() {
   if (lastSignal && summary?.activeTrade) {
     const cp = lastSignal.price;
     const ep = summary.activeTrade.entryPrice;
-    // notional real: margen × leverage, mismo criterio que backend
-    // (BacktestService y PaperTradeService.closeTrade)
     const notional = (config?.positionSize ?? 100) * (config?.leverage ?? 1);
 
     const pc =
@@ -133,30 +131,30 @@ export default function Home() {
             CryptoBot
           </span>
           {config && summary?.isTestnet !== undefined && (
-  <div className="flex items-center gap-1 text-xs min-w-0 overflow-x-auto no-scrollbar">
-    <span className="bg-gray-800 text-gray-300 px-1.5 py-0.5 rounded font-mono shrink-0">
-      {config.symbol.replace("USDT", "")}
-    </span>
-    <span className="bg-gray-800 text-gray-300 px-1.5 py-0.5 rounded font-mono shrink-0">
-      {config.timeframe}
-    </span>
-    <span
-      className={`px-1.5 py-0.5 rounded font-medium shrink-0 ${config.mode === "paper" ? "bg-blue-900/40 text-blue-400" : "bg-emerald-900/40 text-emerald-400"}`}
-    >
-      {config.mode === "paper" ? "Paper" : "Real"}
-    </span>
-    <span
-      className={`px-1.5 py-0.5 rounded font-medium shrink-0 ${
-        summary.isTestnet
-          ? "bg-amber-900/40 text-amber-400"
-          : "bg-red-900/40 text-red-400"
-      }`}
-      title="Fuente de datos de mercado"
-    >
-      {summary.isTestnet ? "Datos: Testnet" : "Datos: Mainnet"}
-    </span>
-  </div>
-)}
+            <div className="flex items-center gap-1 text-xs min-w-0 overflow-x-auto no-scrollbar">
+              <span className="bg-gray-800 text-gray-300 px-1.5 py-0.5 rounded font-mono shrink-0">
+                {config.symbol.replace("USDT", "")}
+              </span>
+              <span className="bg-gray-800 text-gray-300 px-1.5 py-0.5 rounded font-mono shrink-0">
+                {config.timeframe}
+              </span>
+              <span
+                className={`px-1.5 py-0.5 rounded font-medium shrink-0 ${config.mode === "paper" ? "bg-blue-900/40 text-blue-400" : "bg-emerald-900/40 text-emerald-400"}`}
+              >
+                {config.mode === "paper" ? "Paper" : "Real"}
+              </span>
+              <span
+                className={`px-1.5 py-0.5 rounded font-medium shrink-0 ${
+                  summary.isTestnet
+                    ? "bg-amber-900/40 text-amber-400"
+                    : "bg-red-900/40 text-red-400"
+                }`}
+                title="Fuente de datos de mercado"
+              >
+                {summary.isTestnet ? "Datos: Testnet" : "Datos: Mainnet"}
+              </span>
+            </div>
+          )}
         </div>
         <div className="flex items-center gap-2 shrink-0">
           {config && (
@@ -199,7 +197,7 @@ export default function Home() {
           {[
             { id: "dashboard", icon: LayoutDashboard, label: "Dashboard" },
             { id: "config", icon: Settings, label: "Configuración" },
-            { id: "backtest", icon: Play, label: "Backtest" },
+            { id: "backtest", icon: Play, label: "Robustez" },
           ].map(({ id, icon: Icon, label }) => (
             <button
               key={id}
