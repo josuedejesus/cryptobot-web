@@ -34,16 +34,33 @@ interface WindowsResult {
   trades: WindowTrade[];
 }
 
-// El `reason` viene como "VWAP Reversion bajista | Score: 3.17 (+ Tendencia a
-// favor (17%), Bajo VWAP)". Separamos tipo de entrada y factores/indicadores.
+// El `reason` se arma como "{factor top} | Score: N (+ otros factores)". OJO:
+// el factor top NO es el evento de entrada — es el de mayor puntaje (con
+// scoreTrendAligned alto, suele ser "Tendencia a favor"). Para agrupar por
+// TIPO DE ENTRADA real hay que detectar el/los EVENTOS (Stoch RSI / Squeeze /
+// VWAP Reversion) en todo el reason, e ignorar las confirmaciones.
 function parseReason(reason: string): {
   type: string;
   score: string;
   factors: string;
 } {
-  const type = reason.split("|")[0]?.trim() ?? reason;
+  const events: string[] = [];
+  if (/Stoch RSI/i.test(reason)) events.push("Stoch RSI");
+  if (/Squeeze/i.test(reason)) events.push("Squeeze");
+  if (/VWAP Reversion/i.test(reason)) events.push("VWAP Reversion");
+  const type = events.join(" + ") || reason.split("|")[0]?.trim() || reason;
+
   const score = reason.match(/Score:\s*([\d.]+)/)?.[1] ?? "";
-  const factors = reason.match(/\(\+?\s*(.+?)\)\s*⚡?\s*$/)?.[1] ?? "";
+
+  // Confirmaciones (indicadores de apoyo), no eventos.
+  const conf: string[] = [];
+  const trend = reason.match(/Tendencia (a favor|en contra) \((\d+)%\)/);
+  if (trend) conf.push(`Tend ${trend[1] === "a favor" ? "✓" : "✗"}${trend[2]}%`);
+  if (/Volumen alto/i.test(reason)) conf.push("Vol");
+  if (/Sobre VWAP/i.test(reason)) conf.push("↑VWAP");
+  if (/Bajo VWAP/i.test(reason)) conf.push("↓VWAP");
+  const factors = conf.join(" · ");
+
   return { type, score, factors };
 }
 
