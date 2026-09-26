@@ -175,16 +175,27 @@ export default function BacktestPanel() {
   const allTrades = windowsResult?.trades ?? [];
   const lossTrades = allTrades.filter((t) => t.result === "LOSS");
   const shownTrades = onlyLosses ? lossTrades : allTrades;
-  // Pérdidas agrupadas por tipo de entrada — para ver qué señal causa los loss.
-  const lossByType = Object.entries(
-    lossTrades.reduce<Record<string, { n: number; pnl: number }>>((acc, t) => {
+  // NETO por tipo de entrada (sobre TODOS los trades, no solo pérdidas): dice
+  // qué evento realmente aporta o resta. Un evento con muchos loss puede ser
+  // igual el que más gana — hay que mirar el neto, no la cantidad de pérdidas.
+  const netByType = Object.entries(
+    allTrades.reduce<
+      Record<string, { n: number; wins: number; losses: number; pnl: number }>
+    >((acc, t) => {
       const { type } = parseReason(t.reason);
-      acc[type] = acc[type] || { n: 0, pnl: 0 };
-      acc[type].n++;
-      acc[type].pnl += t.pnl;
+      const g = (acc[type] = acc[type] || {
+        n: 0,
+        wins: 0,
+        losses: 0,
+        pnl: 0,
+      });
+      g.n++;
+      if (t.result === "WIN") g.wins++;
+      else if (t.result === "LOSS") g.losses++;
+      g.pnl += t.pnl;
       return acc;
     }, {}),
-  ).sort((a, b) => a[1].pnl - b[1].pnl);
+  ).sort((a, b) => a[1].pnl - b[1].pnl); // peor neto primero (para ver los lastres)
 
   return (
     <div className="max-w-4xl mx-auto space-y-4">
@@ -440,24 +451,45 @@ export default function BacktestPanel() {
             </button>
           </div>
 
-          {/* Resumen: pérdidas por tipo de entrada (dónde se concentran) */}
-          {lossByType.length > 0 && (
-            <div className="mb-4 space-y-1 bg-gray-950/50 rounded-lg p-3">
-              <p className="text-[11px] text-gray-600 mb-1">
-                Pérdidas por tipo de entrada:
+          {/* Neto por tipo de entrada — qué evento aporta o resta DE VERDAD.
+              Ordenado peor-neto primero: si algo está arriba en rojo, ese es
+              el lastre. Un evento con muchos loss pero neto positivo NO sobra. */}
+          {netByType.length > 0 && (
+            <div className="mb-4 bg-gray-950/50 rounded-lg p-3">
+              <p className="text-[11px] text-gray-600 mb-2">
+                Neto por tipo de entrada (todos los trades — el que decide si un
+                evento aporta o resta):
               </p>
-              {lossByType.map(([type, s]) => (
-                <div
-                  key={type}
-                  className="flex items-center justify-between text-xs"
-                >
-                  <span className="text-gray-400 truncate">{type}</span>
-                  <span className="text-gray-500 shrink-0 ml-2">
-                    {s.n} loss ·{" "}
-                    <span className="text-red-400">${s.pnl.toFixed(2)}</span>
-                  </span>
-                </div>
-              ))}
+              <div className="space-y-1.5">
+                {netByType.map(([type, s]) => {
+                  const decisive = s.wins + s.losses;
+                  const wr = decisive
+                    ? Math.round((s.wins / decisive) * 100)
+                    : 0;
+                  return (
+                    <div
+                      key={type}
+                      className="flex items-center justify-between gap-2 text-xs"
+                    >
+                      <span className="text-gray-300 truncate">{type}</span>
+                      <span className="flex items-center gap-2.5 shrink-0 text-gray-500 tabular-nums">
+                        <span>{s.n}t</span>
+                        <span className="text-gray-400">
+                          {s.wins}W/{s.losses}L
+                        </span>
+                        <span>{wr}%</span>
+                        <span
+                          className={`font-medium w-16 text-right ${
+                            s.pnl >= 0 ? "text-emerald-400" : "text-red-400"
+                          }`}
+                        >
+                          {s.pnl >= 0 ? "+" : ""}${s.pnl.toFixed(2)}
+                        </span>
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           )}
 
