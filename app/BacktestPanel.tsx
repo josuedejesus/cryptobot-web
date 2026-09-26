@@ -13,6 +13,14 @@ interface SavedConfig {
   timeframe: string;
 }
 
+interface WindowTrade {
+  date: string;
+  signal: string;
+  reason: string;
+  pnl: number;
+  result: string;
+}
+
 interface WindowsResult {
   windows: {
     start: string;
@@ -23,6 +31,20 @@ interface WindowsResult {
   }[];
   positive: number;
   total: number;
+  trades: WindowTrade[];
+}
+
+// El `reason` viene como "VWAP Reversion bajista | Score: 3.17 (+ Tendencia a
+// favor (17%), Bajo VWAP)". Separamos tipo de entrada y factores/indicadores.
+function parseReason(reason: string): {
+  type: string;
+  score: string;
+  factors: string;
+} {
+  const type = reason.split("|")[0]?.trim() ?? reason;
+  const score = reason.match(/Score:\s*([\d.]+)/)?.[1] ?? "";
+  const factors = reason.match(/\(\+?\s*(.+?)\)\s*⚡?\s*$/)?.[1] ?? "";
+  return { type, score, factors };
 }
 
 export default function BacktestPanel() {
@@ -41,6 +63,7 @@ export default function BacktestPanel() {
   const [windowsLoading, setWindowsLoading] = useState(false);
   const [windowsResult, setWindowsResult] = useState<WindowsResult | null>(null);
   const [windowsError, setWindowsError] = useState<string | null>(null);
+  const [onlyLosses, setOnlyLosses] = useState(true);
 
   const loadConfigs = async () => {
     try {
@@ -131,6 +154,20 @@ export default function BacktestPanel() {
       setWindowsLoading(false);
     }
   };
+
+  const allTrades = windowsResult?.trades ?? [];
+  const lossTrades = allTrades.filter((t) => t.result === "LOSS");
+  const shownTrades = onlyLosses ? lossTrades : allTrades;
+  // Pérdidas agrupadas por tipo de entrada — para ver qué señal causa los loss.
+  const lossByType = Object.entries(
+    lossTrades.reduce<Record<string, { n: number; pnl: number }>>((acc, t) => {
+      const { type } = parseReason(t.reason);
+      acc[type] = acc[type] || { n: 0, pnl: 0 };
+      acc[type].n++;
+      acc[type].pnl += t.pnl;
+      return acc;
+    }, {}),
+  ).sort((a, b) => a[1].pnl - b[1].pnl);
 
   return (
     <div className="max-w-4xl mx-auto space-y-4">
@@ -362,6 +399,106 @@ export default function BacktestPanel() {
                     </td>
                   </tr>
                 ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Trades: cuáles pierden y con qué tipo de entrada + indicadores */}
+      {windowsResult && allTrades.length > 0 && (
+        <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-5">
+          <div className="flex items-center justify-between gap-2 mb-3">
+            <p className="text-xs text-gray-500 uppercase tracking-widest">
+              Trades —{" "}
+              {onlyLosses
+                ? `${lossTrades.length} pérdidas`
+                : `${allTrades.length} total`}
+            </p>
+            <button
+              onClick={() => setOnlyLosses((v) => !v)}
+              className="text-xs text-gray-500 hover:text-white transition-colors shrink-0"
+            >
+              {onlyLosses ? "Ver todos" : "Solo pérdidas"}
+            </button>
+          </div>
+
+          {/* Resumen: pérdidas por tipo de entrada (dónde se concentran) */}
+          {lossByType.length > 0 && (
+            <div className="mb-4 space-y-1 bg-gray-950/50 rounded-lg p-3">
+              <p className="text-[11px] text-gray-600 mb-1">
+                Pérdidas por tipo de entrada:
+              </p>
+              {lossByType.map(([type, s]) => (
+                <div
+                  key={type}
+                  className="flex items-center justify-between text-xs"
+                >
+                  <span className="text-gray-400 truncate">{type}</span>
+                  <span className="text-gray-500 shrink-0 ml-2">
+                    {s.n} loss ·{" "}
+                    <span className="text-red-400">${s.pnl.toFixed(2)}</span>
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Tabla de trades */}
+          <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0 max-h-[480px] overflow-y-auto">
+            <table className="w-full text-sm min-w-[560px]">
+              <thead>
+                <tr className="text-left text-[11px] text-gray-500 uppercase tracking-wider border-b border-gray-800 sticky top-0 bg-gray-900">
+                  <th className="pb-2 pr-3">Fecha</th>
+                  <th className="pb-2 pr-3">Dir</th>
+                  <th className="pb-2 pr-3">Entrada</th>
+                  <th className="pb-2 pr-3">Sc</th>
+                  <th className="pb-2 pr-3">Indicadores</th>
+                  <th className="pb-2">PnL</th>
+                </tr>
+              </thead>
+              <tbody>
+                {shownTrades.map((t, i) => {
+                  const { type, score, factors } = parseReason(t.reason);
+                  const isLoss = t.result === "LOSS";
+                  return (
+                    <tr
+                      key={i}
+                      className={`border-b border-gray-800/50 last:border-0 ${
+                        isLoss ? "bg-red-900/10" : ""
+                      }`}
+                    >
+                      <td className="py-2 pr-3 text-gray-500 whitespace-nowrap text-xs">
+                        {t.date}
+                      </td>
+                      <td className="py-2 pr-3">
+                        <span
+                          className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                            t.signal === "LONG"
+                              ? "bg-emerald-900/40 text-emerald-400"
+                              : "bg-red-900/40 text-red-400"
+                          }`}
+                        >
+                          {t.signal}
+                        </span>
+                      </td>
+                      <td className="py-2 pr-3 text-gray-300 whitespace-nowrap text-xs">
+                        {type}
+                      </td>
+                      <td className="py-2 pr-3 text-gray-500 text-xs">{score}</td>
+                      <td className="py-2 pr-3 text-gray-500 text-xs">
+                        {factors}
+                      </td>
+                      <td
+                        className={`py-2 font-medium whitespace-nowrap text-xs ${
+                          t.pnl >= 0 ? "text-emerald-400" : "text-red-400"
+                        }`}
+                      >
+                        {t.pnl >= 0 ? "+" : ""}${t.pnl.toFixed(2)}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
