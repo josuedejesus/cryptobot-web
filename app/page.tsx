@@ -618,6 +618,12 @@ export default function Home() {
                               t.captureRate != null
                                 ? `${(t.captureRate * 100).toFixed(1)}%`
                                 : null,
+                            quantity: t.quantity?.toFixed(4),
+                            notional: t.notional?.toFixed(2),
+                            grossPricePnl: t.grossPricePnl?.toFixed(2),
+                            unexplainedDifference:
+                              t.unexplainedDifference?.toFixed(2),
+                            reconciliation: t.reconciliation,
                           })),
                         };
 
@@ -652,11 +658,22 @@ export default function Home() {
                             >
                               {trade.type}
                             </span>
-                            <span className="flex items-center gap-1 font-mono text-gray-400 text-xs shrink-0">
+                            <span
+                              className="flex items-center gap-1 font-mono text-gray-400 text-xs shrink-0"
+                              title="Entrada y salida ejecutadas (precio de fill)"
+                            >
                               ${trade.entryPrice.toFixed(4)}
                               <ChevronRight className="w-3 h-3 text-gray-600" />
                               ${trade.exitPrice?.toFixed(4)}
                             </span>
+                            {trade.reconciliation === "INCONSISTENT" && (
+                              <span
+                                className="text-xs font-medium px-1.5 py-0.5 rounded bg-amber-900/40 text-amber-400 shrink-0"
+                                title="El PnL reportado no se deriva de estos precios. El PnL viene del income de la cuenta y es correcto a nivel de cuenta, pero su atribucion a este trade no es reconciliable."
+                              >
+                                PnL no reconciliable
+                              </span>
+                            )}
                             {trade.reason && (
                               <span className="text-gray-600 text-xs hidden md:inline truncate max-w-32 lg:max-w-48 xl:max-w-64">
                                 {trade.reason.split("|")[0].trim()}
@@ -731,6 +748,35 @@ export default function Home() {
                                 ${trade.troughPrice.toFixed(4)}
                               </span>
                             )}
+                          </div>
+                        )}
+
+                        {(trade.quantity != null ||
+                          trade.grossPricePnl != null) && (
+                          <div className="flex flex-wrap gap-x-4 gap-y-0.5 mt-1 text-xs text-gray-500">
+                            {trade.quantity != null && (
+                              <span>Cantidad: {trade.quantity.toFixed(2)}</span>
+                            )}
+                            {trade.notional != null && (
+                              <span>
+                                Notional: ${trade.notional.toFixed(2)}
+                              </span>
+                            )}
+                            {trade.grossPricePnl != null && (
+                              <span>
+                                Bruto por precios:{" "}
+                                {trade.grossPricePnl >= 0 ? "+" : ""}
+                                {trade.grossPricePnl.toFixed(2)} USDT
+                              </span>
+                            )}
+                            {trade.unexplainedDifference != null &&
+                              Math.abs(trade.unexplainedDifference) >= 0.05 && (
+                                <span className="text-amber-500">
+                                  Sin explicar:{" "}
+                                  {trade.unexplainedDifference >= 0 ? "+" : ""}
+                                  {trade.unexplainedDifference.toFixed(2)} USDT
+                                </span>
+                              )}
                           </div>
                         )}
 

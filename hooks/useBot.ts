@@ -28,6 +28,24 @@ export interface Trade {
   givebackPnl?: number | null;
   /** Decimal, no porcentaje: 0.475 se muestra como 47.5%. Puede ser negativo. */
   captureRate?: number | null;
+  /** Cantidad ejecutada y notional de entrada (quantity x entryPrice). */
+  quantity?: number | null;
+  notional?: number | null;
+  /** PnL que explican SOLO los precios y la cantidad, sin costes. */
+  grossPricePnl?: number | null;
+  /** storedPnl - (gross - costes conocidos). Si no es ~0, algo no cierra. */
+  unexplainedDifference?: number | null;
+  /**
+   * Si el `pnl` reportado se deriva de los precios almacenados.
+   * INCONSISTENT significa que el PnL es el de la cuenta pero NO corresponde a
+   * estos precios: hay trades historicos de Live en ese estado.
+   */
+  reconciliation?:
+    | "CONSISTENT"
+    | "PARTIALLY_RECONCILED"
+    | "INCONSISTENT"
+    | "INSUFFICIENT_DATA"
+    | null;
 }
 export interface Summary {
   balance: number;
