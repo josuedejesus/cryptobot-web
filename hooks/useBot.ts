@@ -19,6 +19,15 @@ export interface Trade {
   troughPrice?: number;
   trailingStop?: number;
   breakevenApplied?: boolean; // 👈 nuevo
+  /**
+   * Excursión favorable, calculada en el BACKEND a partir del PnL reportado.
+   * No se recalcula acá: el frontend solo formatea. null en trades legacy sin
+   * peakPrice o sin quantity.
+   */
+  peakPnl?: number | null;
+  givebackPnl?: number | null;
+  /** Decimal, no porcentaje: 0.475 se muestra como 47.5%. Puede ser negativo. */
+  captureRate?: number | null;
 }
 export interface Summary {
   balance: number;
@@ -57,6 +66,13 @@ export type BotConfig = {
   isActive: boolean;
   symbol: string;
   timeframe: string;
+  /**
+   * Multi-Timeframe Position Management (Paper). null = igual al signal
+   * timeframe: la posición se gestiona al cierre del signal timeframe, como
+   * antes. Un valor menor solo cambia cada cuánto se gestiona la posición ya
+   * abierta; las señales siguen siendo del signal timeframe.
+   */
+  executionTimeframe: string | null;
   emaFast: number;
   emaSlow: number;
   rsiPeriod: number;

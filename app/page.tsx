@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useBot } from "@/hooks/useBot";
 import {
   TrendingUp,
@@ -138,6 +139,15 @@ export default function Home() {
               <span className="bg-gray-800 text-gray-300 px-1.5 py-0.5 rounded font-mono shrink-0">
                 {config.timeframe}
               </span>
+              {config.executionTimeframe &&
+                config.executionTimeframe !== config.timeframe && (
+                  <span
+                    title={`Señales en ${config.timeframe}; la posición abierta se gestiona cada ${config.executionTimeframe}`}
+                    className="bg-gray-800 text-gray-300 px-1.5 py-0.5 rounded font-mono shrink-0"
+                  >
+                    exec {config.executionTimeframe}
+                  </span>
+                )}
               <span
                 className={`px-1.5 py-0.5 rounded font-medium shrink-0 ${config.mode === "paper" ? "bg-blue-900/40 text-blue-400" : "bg-emerald-900/40 text-emerald-400"}`}
               >
@@ -212,6 +222,12 @@ export default function Home() {
               {label}
             </button>
           ))}
+          <Link
+            href="/research"
+            className="flex items-center px-3 sm:px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-300 whitespace-nowrap"
+          >
+            Research Lab
+          </Link>
         </div>
       </div>
 
@@ -223,7 +239,10 @@ export default function Home() {
               <div className="bg-gray-900 border border-gray-800 rounded-xl p-3 sm:p-4">
                 <div className="flex items-center justify-between mb-2">
                   <p className="text-xs text-gray-500 uppercase tracking-widest">
-                    {config.symbol.replace("USDT", "")} · {config.timeframe}
+                    {config.symbol.replace("USDT", "")} · Signal{" "}
+                    {config.timeframe} · Execution{" "}
+                    {config.executionTimeframe ?? config.timeframe} · Trend{" "}
+                    {config.trendTimeframe}
                   </p>
                   <span className="text-[10px] text-gray-600">
                     ▲/▼ entrada · ● salida (PnL)
@@ -593,6 +612,12 @@ export default function Home() {
                             reason: t.reason,
                             peakFavorable: t.peakPrice?.toFixed(4),
                             peakAdverso: t.troughPrice?.toFixed(4),
+                            peakPnl: t.peakPnl?.toFixed(2),
+                            givebackPnl: t.givebackPnl?.toFixed(2),
+                            captureRate:
+                              t.captureRate != null
+                                ? `${(t.captureRate * 100).toFixed(1)}%`
+                                : null,
                           })),
                         };
 
@@ -704,6 +729,26 @@ export default function Home() {
                                   ? "↓ mín adverso:"
                                   : "↑ máx adverso:"}{" "}
                                 ${trade.troughPrice.toFixed(4)}
+                              </span>
+                            )}
+                          </div>
+                        )}
+
+                        {trade.peakPnl != null && (
+                          <div className="flex flex-wrap gap-x-4 gap-y-0.5 mt-1 text-xs">
+                            <span className="text-emerald-600">
+                              Pico PnL: {trade.peakPnl >= 0 ? "+" : ""}
+                              {trade.peakPnl.toFixed(2)} USDT
+                            </span>
+                            {trade.givebackPnl != null && (
+                              <span className="text-amber-500">
+                                Giveback: {trade.givebackPnl.toFixed(2)} USDT
+                              </span>
+                            )}
+                            {trade.captureRate != null && (
+                              <span className="text-gray-500">
+                                Capturado:{" "}
+                                {(trade.captureRate * 100).toFixed(1)}%
                               </span>
                             )}
                           </div>

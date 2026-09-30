@@ -1,0 +1,180 @@
+{
+  "metadata": {
+    "configId": 7,
+    "symbol": "XRPUSDT",
+    "timeframe": "4h",
+    "trendTimeframe": "1d",
+    "from": "2026-07-01T00:00:00.000Z",
+    "to": "2026-09-28T00:00:00.000Z",
+    "executionMode": "FIXED_ENTRY_COHORT",
+    "cohortSource": "CURRENT_SEQUENTIAL",
+    "executionTimeframe": "4h"
+  },
+  "trace": {
+    "entryId": "LONG:1787572800000:1787587200000",
+    "variantId": "ADAPTIVE_RUNNER:protect=0.0075:capture=0.25:runner=0.015:runnerAtr=2:strong=0.03:strongAtr=1.5",
+    "exitStrategy": {
+      "type": "ADAPTIVE_RUNNER",
+      "params": {
+        "protectionActivationPct": 0.0075,
+        "protectionCaptureRatio": 0.25,
+        "runnerActivationPct": 0.015,
+        "runnerAtrMultiplier": 2,
+        "strongRunnerActivationPct": 0.03,
+        "strongRunnerAtrMultiplier": 1.5
+      }
+    },
+    "side": "LONG",
+    "signalTime": 1787572800000,
+    "entryTime": 1787587200000,
+    "entryPrice": 1.5008001,
+    "initialStop": 1.455776097,
+    "atrAtEntry": 0.05634285714285715,
+    "steps": [
+      {
+        "candleIndex": 333,
+        "candleOpenTime": 1787587200000,
+        "decisionTime": 1787601600000,
+        "previousClose": 1.5005,
+        "openGapPct": 0.0000666444518493762,
+        "closeBeyondStopAfter": true,
+        "candle": {
+          "open": 1.5006,
+          "high": 1.523,
+          "low": 1.4615,
+          "close": 1.4824
+        },
+        "phaseBefore": "RISK",
+        "phaseAfter": "PROTECTED",
+        "entryPrice": 1.5008001,
+        "bestPriceBefore": 1.5008001,
+        "bestPriceAfter": 1.523,
+        "favorablePctBefore": 0,
+        "favorablePctAfter": 0.014792043257459765,
+        "stopBefore": 1.455776097,
+        "stopAfter": 1.5063500749999998,
+        "stopCandidate": 1.5063500749999998,
+        "protectedCandidate": 1.5063500749999998,
+        "atrCandidate": null,
+        "currentAtr": 0.05224285714285713,
+        "atrAtEntry": 0.05634285714285715,
+        "atrUsed": null,
+        "atrSource": "NONE",
+        "stopUpdateTiming": "NEXT_CANDLE",
+        "effectiveFrom": "NEXT_CANDLE",
+        "stopTriggered": false,
+        "gapExit": false,
+        "thresholdCrossings": [
+          {
+            "type": "PROTECTION_ACTIVATED",
+            "threshold": 0.0075,
+            "phase": "PROTECTED"
+          }
+        ],
+        "excursion": {
+          "maxFavorable": 1.523,
+          "maxAdverse": 1.4615,
+          "maxFavorablePct": 0.014792043257459765,
+          "maxFavorablePnl": 2.9584086514919528,
+          "maxAdversePnl": -5.237219800291851
+        },
+        "exit": null,
+        "atrAsOfTime": 1787601600000
+      },
+      {
+        "candleIndex": 334,
+        "candleOpenTime": 1787601600000,
+        "decisionTime": 1787616000000,
+        "previousClose": 1.4824,
+        "openGapPct": 0,
+        "closeBeyondStopAfter": true,
+        "candle": {
+          "open": 1.4824,
+          "high": 1.4888,
+          "low": 1.4663,
+          "close": 1.4813
+        },
+        "phaseBefore": "PROTECTED",
+        "phaseAfter": "PROTECTED",
+        "entryPrice": 1.5008001,
+        "bestPriceBefore": 1.523,
+        "bestPriceAfter": 1.523,
+        "favorablePctBefore": 0.014792043257459765,
+        "favorablePctAfter": 0.014792043257459765,
+        "stopBefore": 1.5063500749999998,
+        "stopAfter": 1.5063500749999998,
+        "stopCandidate": null,
+        "protectedCandidate": null,
+        "atrCandidate": null,
+        "currentAtr": 0.05017142857142857,
+        "atrAtEntry": 0.05634285714285715,
+        "atrUsed": null,
+        "atrSource": "NONE",
+        "stopUpdateTiming": "NEXT_CANDLE",
+        "effectiveFrom": "NEXT_CANDLE",
+        "stopTriggered": true,
+        "gapExit": true,
+        "thresholdCrossings": [],
+        "excursion": {
+          "maxFavorable": 1.523,
+          "maxAdverse": 1.4615,
+          "maxFavorablePct": 0.014792043257459765,
+          "maxFavorablePnl": 2.9584086514919528,
+          "maxAdversePnl": -5.237219800291851
+        },
+        "exit": {
+          "rawPrice": 1.4824,
+          "price": 1.48210352,
+          "reason": "stop"
+        },
+        "atrAsOfTime": 1787616000000
+      }
+    ],
+    "final": {
+      "side": "LONG",
+      "reason": "Tendencia a favor | Score: 5.5 (+ VWAP Reversion alcista, Sobre VWAP) ⚡",
+      "entryPrice": 1.5008001,
+      "exitPrice": 1.48210352,
+      "signalTime": 1787572800000,
+      "entryTime": 1787587200000,
+      "exitTime": 1787616000000,
+      "pnl": -2.7103025672772905,
+      "fee": 0.198754225829276,
+      "funding": 0.02,
+      "result": "LOSS",
+      "exitReason": "stop",
+      "candlesHeld": 2,
+      "maxFavorable": 1.523,
+      "maxAdverse": 1.4615,
+      "maxFavorablePnl": 2.96,
+      "maxAdversePnl": -5.24,
+      "candlesToMaxFavorable": 1,
+      "candlesToMaxAdverse": 1,
+      "adverseBeforeFavorable": false,
+      "wasProfit": true,
+      "peakPnlBeforeLoss": 2.9584086514919528,
+      "maxFavorablePct": 0.014792043257459765
+    },
+    "summary": {
+      "phasesReached": [
+        "RISK",
+        "PROTECTED"
+      ],
+      "phaseTransitions": [
+        {
+          "candleIndex": 333,
+          "from": "RISK",
+          "to": "PROTECTED"
+        }
+      ],
+      "maxManagedFavorablePct": 0.014792043257459765,
+      "maxFavorablePct": 0.014792043257459765,
+      "stoppedByGap": true,
+      "largestStopTightening": 0.05057397799999985,
+      "mostProtectiveStop": 1.5063500749999998,
+      "finalStopBeforeExit": 1.5063500749999998
+    },
+    "signalTimeframe": "4h",
+    "executionTimeframe": "4h"
+  }
+}
