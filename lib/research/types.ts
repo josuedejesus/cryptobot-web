@@ -199,12 +199,34 @@ export interface ResearchVariant {
 export interface ResearchRunResponse extends ResearchVariant {
   metadata: ResearchMetadata;
 }
+/**
+ * Identidad reproducible de una corrida. La produce la MISMA ejecución de
+ * compare-exits que devolvió `results`, no una segunda carga de datos.
+ */
+export interface ResearchReproducibility {
+  runId: string;
+  effectiveConfigHash: string;
+  experimentDefinitionHash: string;
+  signalDatasetHash: string;
+  trendDatasetHash: string;
+  executionDatasetHash: string | null;
+  entryCount: number;
+  entryCohortHash: string;
+  provider: string;
+  signalCandleCount: number;
+  actualFrom: string | null;
+  actualTo: string | null;
+}
+
 export interface ResearchCompareResponse {
   metadata: ResearchMetadata & {
     entries: number;
     cohortSource: "CURRENT_SEQUENTIAL";
   };
   results: ResearchVariant[];
+  reproducibility: ResearchReproducibility;
+  /** Manifest completo, para Copy/Download. */
+  manifest: unknown;
 }
 export type LabResult =
   | { kind: "single"; data: ResearchRunResponse }

@@ -13,6 +13,7 @@ import { formatDate } from "@/lib/research/format";
 import { isAdaptive } from "@/lib/research/presentation";
 import ResearchControls from "./ResearchControls";
 import ResearchSummary from "./ResearchSummary";
+import ResearchReproducibility from "./ResearchReproducibility";
 import ResearchExcursion from "./ResearchExcursion";
 import ResearchTradeTable from "./ResearchTradeTable";
 import ResearchAdaptivePhases from "./ResearchAdaptivePhases";
@@ -197,6 +198,12 @@ export default function ResearchLab() {
                 salida y no representa directamente un portfolio ejecutable.
               </p>
             </div>
+          )}
+          {result.kind === "compare" && (
+            <ResearchReproducibility
+              reproducibility={result.data.reproducibility}
+              manifest={result.data.manifest}
+            />
           )}
           <ResearchSummary
             variants={variants}

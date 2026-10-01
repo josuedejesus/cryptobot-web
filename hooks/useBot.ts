@@ -80,6 +80,13 @@ export interface Signal {
 
 export type BotConfig = {
   id: number;
+  /**
+   * Estrategia de salida. null = CURRENT, el comportamiento previo de toda
+   * config existente. Los parametros dependen de la estrategia y su schema lo
+   * publica /bot-config/capabilities.
+   */
+  exitStrategyType?: string | null;
+  exitStrategyParams?: Record<string, number> | null;
   name: string;
   isActive: boolean;
   symbol: string;

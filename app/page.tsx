@@ -223,6 +223,12 @@ export default function Home() {
             </button>
           ))}
           <Link
+            href="/signals"
+            className="flex items-center px-3 sm:px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-300 whitespace-nowrap"
+          >
+            Señales
+          </Link>
+          <Link
             href="/research"
             className="flex items-center px-3 sm:px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-300 whitespace-nowrap"
           >

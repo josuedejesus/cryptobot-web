@@ -12,6 +12,7 @@ import {
   ShieldAlert,
 } from "lucide-react";
 import { BotConfig } from "@/hooks/useBot";
+import ExitStrategySection from "@/components/ExitStrategySection";
 
 interface BotControllerProps {
   config: BotConfig;
@@ -225,6 +226,19 @@ export default function BotController({
       <div
         className={`space-y-4 ${activeTrade ? "opacity-40 pointer-events-none select-none" : ""}`}
       >
+        {/* Estrategia de salida */}
+        <SectionCard title="Estrategia de salida">
+          <ExitStrategySection
+            mode={form.mode}
+            type={form.exitStrategyType ?? null}
+            params={form.exitStrategyParams ?? null}
+            onChange={(next) => {
+              set("exitStrategyType", next.type);
+              set("exitStrategyParams", next.params);
+            }}
+          />
+        </SectionCard>
+
         {/* General */}
         <SectionCard title="General">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
