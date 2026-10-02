@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import BotController from "./BotController";
 import BacktestPanel from "./BacktestPanel";
+import ActiveTradeStrategyStatus from "@/components/ActiveTradeStrategyStatus";
 import CandleChart from "@/components/CandleChart";
 import { formatInTimeZone } from "date-fns-tz";
 
@@ -516,33 +517,29 @@ export default function Home() {
                   )}
                   <div className="min-w-0">
                     <p className="text-xs text-gray-500 mb-0.5">
-                      {summary.activeTrade.trailingStop
-                        ? "Stop protegido"
-                        : "Stop inicial (SL)"}
+                      Stop efectivo
                     </p>
                     <p
-                      className={`font-mono truncate ${summary.activeTrade.trailingStop ? "text-emerald-400" : "text-red-400"}`}
+                      className="font-mono truncate text-emerald-400"
                     >
                       $
                       {(
+                        summary.activeTrade.effectiveStop ??
                         summary.activeTrade.trailingStop ??
                         summary.activeTrade.stopLoss
                       ).toFixed(4)}
                     </p>
-                    {summary.activeTrade.trailingStop && (
-                      <p className="text-[11px] text-gray-600 mt-0.5">
-                        SL original: ${summary.activeTrade.stopLoss.toFixed(4)}
-                      </p>
-                    )}
+                    <p className="text-[11px] text-gray-500 mt-0.5">
+                      Initial stop: $
+                      {(summary.activeTrade.initialStop ?? summary.activeTrade.stopLoss).toFixed(4)}
+                    </p>
                   </div>
                 </div>
 
-                <p className="text-[11px] text-gray-600 border-t border-gray-800 pt-3">
-                  Sin take profit fijo — la salida es dinámica. El trade se
-                  cierra automáticamente si el precio toca el stop actual
-                  (breakeven o trailing, lo que esté activo), dejando correr el
-                  resto del movimiento.
-                </p>
+                <ActiveTradeStrategyStatus
+                  trade={summary.activeTrade}
+                  currentPrice={lastSignal?.price ?? null}
+                />
               </div>
             )}
 

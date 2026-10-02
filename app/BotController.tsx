@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { BotConfig } from "@/hooks/useBot";
 import ExitStrategySection from "@/components/ExitStrategySection";
+import StopExecutionSection from "@/components/StopExecutionSection";
 
 interface BotControllerProps {
   config: BotConfig;
@@ -236,6 +237,14 @@ export default function BotController({
               set("exitStrategyType", next.type);
               set("exitStrategyParams", next.params);
             }}
+          />
+        </SectionCard>
+
+        <SectionCard title="Ejecución de stops">
+          <StopExecutionSection
+            mode={form.mode}
+            value={form.stopExecutionMode}
+            onChange={(value) => set("stopExecutionMode", value)}
           />
         </SectionCard>
 

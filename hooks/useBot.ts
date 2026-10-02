@@ -9,6 +9,14 @@ export interface Trade {
   entryPrice: number;
   exitPrice?: number;
   stopLoss: number;
+  initialStop?: number;
+  effectiveStop?: number;
+  stopExecutionMode?: "CANDLE_CLOSE" | "INTRABAR" | "EXCHANGE_NATIVE" | null;
+  stopExecutionTimeframe?: string | null;
+  mode?: string;
+  configHash?: string | null;
+  exitStrategyType?: string | null;
+  strategyState?: ActiveTradeStrategyState;
   takeProfit: number;
   result?: "WIN" | "LOSS";
   pnl?: number;
@@ -46,6 +54,40 @@ export interface Trade {
     | "INCONSISTENT"
     | "INSUFFICIENT_DATA"
     | null;
+}
+
+export interface ActiveTradeStrategyState {
+  type: string;
+  label: string;
+  status: "ACTIVE" | "WAITING" | "THRESHOLD_REACHED" | "UNAVAILABLE";
+  priceState: { bestPrice: number; currentPrice: number | null };
+  stop: {
+    initial: number;
+    candidate: number | null;
+    effective: number;
+    previousEffective: number | null;
+    candidateBlockedByMonotonicity: boolean;
+    updateTiming: string;
+    lastUpdatedAt: number | null;
+  };
+  lastStrategyEvaluationAt: number | null;
+  current?: {
+    breakeven: "ACTIVE" | "WAITING" | "DISABLED" | "UNAVAILABLE";
+    trailing: "ACTIVE" | "WAITING" | "DISABLED" | "UNAVAILABLE";
+  };
+  activation?: {
+    status: "ACTIVE" | "WAITING" | "THRESHOLD_REACHED" | "UNAVAILABLE";
+    thresholdPct: number | null;
+    activationPrice: number | null;
+    remainingPct: number | null;
+    activatedAt: number | null;
+  };
+  volatility?: {
+    atr: number | null;
+    atrSource: "CURRENT" | "ENTRY" | "NONE" | null;
+    regime: string | null;
+    multiplier: number | null;
+  };
 }
 export interface Summary {
   balance: number;
@@ -98,6 +140,7 @@ export type BotConfig = {
    * abierta; las señales siguen siendo del signal timeframe.
    */
   executionTimeframe: string | null;
+  stopExecutionMode?: "CANDLE_CLOSE" | "INTRABAR";
   emaFast: number;
   emaSlow: number;
   rsiPeriod: number;

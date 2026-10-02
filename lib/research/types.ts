@@ -79,7 +79,8 @@ export interface ResearchCapabilities {
 export type SavedConfig = Pick<
   BotConfig,
   "id" | "name" | "symbol" | "timeframe" | "trendTimeframe" | "isActive"
->;
+> &
+  Partial<Pick<BotConfig, "executionTimeframe" | "stopExecutionMode">>;
 export interface ResearchRequest {
   configId: number;
   from: string;
